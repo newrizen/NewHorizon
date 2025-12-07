@@ -1,0 +1,15 @@
+-- spawn.lua
+-- Este arquivo define as configurações de spawn customizadas para o Happy Mob.
+-- O mob será spawnado em áreas com ar, próximo a nós específicos (por exemplo, "default:stone"),
+-- com um intervalo de verificação, chance de spawn, altura e quantidade máxima de mobs ativos.
+
+mobs:spawn({
+    name = "happy_mob:happy",
+    nodes = {"default:dirt_with_grass"},  -- Nó mais comum no chão
+    max_light = 15,
+    interval = 30,
+    chance = 30000,
+    active_object_count = 2,
+    min_height = -100,
+    max_height = 150
+})
