@@ -4,10 +4,12 @@ Developing a game for Luanti
 ## Key differentiators
 - Walk around the world in a straight line and traverse the world by digging
 - Climb some walls and trees (holding space)
-- Throw rocks (right-click - placing and Q key - throwing)
+- Throw rocks: Placing (right-click) or throwing (Q key)
 - Trees fall when cut down, so it's best to run
 - Model and skin slightly similar to Hytale, but taller
 - Mobs might spawn, but I'm not sure if it works properly yet
+- Run (W two times)
+- Wall kick jump: Jump 2 blocks wall (space 2x)
 - And a few more details...
 
 ## How to Open
