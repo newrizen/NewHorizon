@@ -302,7 +302,7 @@ mobs:spawn({
 -- OVO CRIATIVO
 -------------------------------
 
-mobs:register_egg("happy_mob:ourico", "Ovo para Ouriço", "mobs_chicken_egg.png", 0)
+mobs:register_egg("happy_mob:ourico", "Orbe com Ouriço", "orbspawner.png", 0)
 
 -------------------------------
 -- LOGS FINAIS
