@@ -14,12 +14,12 @@ local spawn_nodes = {
 }
 
 -- Probabilidade de spawn (1 em 30000 chances por intervalo)
-local spawn_chance = 30000
+local spawn_chance = 3000 --30000
 
 -- Texturas disponíveis para o mob (arquivos devem existir na pasta textures)
 local mob_textures = {
   "ouricoskin.png", -- Textura principal obrigatória
-  "ouricoskin.png" -- Textura alternativa opcional
+  "happy_mob_texture_alt.png" -- Textura alternativa opcional
 }
 
 -- Sistema de debug (true para ver logs detalhados)
@@ -36,8 +36,7 @@ end
 -- REGISTRO PRINCIPAL DO MOB
 -------------------------------
 
-mobs:register_mob("happy_mob:happy", {
-
+mobs:register_mob("happy_mob:ourico", {
     -- PROPRIEDADES BÁSICAS --
     type = "animal",          -- Tipo de entidade (animal/monster/npc)
     passive = true,           -- Não ataca jogadores
@@ -48,12 +47,10 @@ mobs:register_mob("happy_mob:happy", {
     -- CONFIGURAÇÕES DE SAÚDE --
     hp_min = 10,              -- Vida mínima inicial
     hp_max = 15,              -- Vida máxima inicial
-    armor = 100,              -- Resistência a danos (0-100) 
-    -- ADICIONEI A LINHA:
-    armor_groups = {fleshy = 100},  -- Agora recebe dano do tipo "fleshy"
+    armor = 100,              -- Resistência a danos (0-100)
     
     -- FÍSICA E COLISÃO --
-    collisionbox = {-0.35, -0.5, -0.35, 0.35, 0.4, 0.35}, -- Caixa de colisão (X1,Y1,Z1,X2,Y2,Z2)
+    collisionbox = {-0.35, 0, -0.35, 0.35, 0.4, 0.35}, -- Caixa de colisão (X1,Y1,Z1,X2,Y2,Z2)
     physical = true,          -- Respeita as leis da física
     stepheight = 1.1,         -- Altura máxima que pode subir (em blocos)
     fall_speed = -8,          -- Força da gravidade (valores negativos)
@@ -64,6 +61,8 @@ mobs:register_mob("happy_mob:happy", {
     mesh = "ourico.obj",   -- Arquivo do modelo 3D
     textures = mob_textures,  -- Lista de texturas aplicáveis
     rotate = 180,             -- Correção de rotação do modelo (graus)
+    visual_size = {x = 15, y = 15}, -- Ajuste ou alteração de tamanho
+    
     
     -- VELOCIDADES --
     walk_velocity = 1.5,      -- Velocidade normal de caminhada
@@ -224,7 +223,7 @@ mobs:register_mob("happy_mob:happy", {
                     self.jump_cooldown = 30  -- Cooldown de 30 segundos
                     self:set_animation("jump")
                     self.object:set_velocity({x = 0, y = 7, z = 0})
-                    minetest.chat_send_player(player:get_player_name(), "O Happy Mob pulou de alegria!")
+                    minetest.chat_send_player(player:get_player_name(), "O ouriço pulou de alegria!")
                     log("Pulo social executado")
                 end
             end
@@ -275,7 +274,7 @@ mobs:register_mob("happy_mob:happy", {
 
         if on_ground then
             local player_name = clicker:get_player_name()
-            minetest.chat_send_player(player_name, "Você fez o Happy Mob pular!")
+            minetest.chat_send_player(player_name, "Você fez o ouriço pular!")
             self.object:set_velocity({x = 0, y = 7, z = 0})
             self:set_animation("jump")
             log("Pulo induzido por jogador")
@@ -288,22 +287,22 @@ mobs:register_mob("happy_mob:happy", {
 -------------------------------
 
 mobs:spawn({
-    name = "happy_mob:happy",
+    name = "happy_mob:ourico",
     nodes = {"air"},          -- Spawna no ar acima dos nós especificados
     neighbors = spawn_nodes,  -- Exige proximidade com esses nós
     max_light = 15,           -- Nível máximo de luminosidade
     interval = 30,            -- Intervalo de tentativas de spawn (segundos)
     chance = spawn_chance,     -- Probabilidade de spawn
-    active_object_count = 4,   -- Quantidade máxima na área
-    min_height = -15,         -- Altura mínima no mapa
-    max_height = 50           -- Altura máxima no mapa
+    active_object_count = 10,   -- Quantidade máxima na área
+    min_height = -10,         -- Altura mínima no mapa
+    max_height = 25           -- Altura máxima no mapa
 })
 
 -------------------------------
 -- OVO CRIATIVO
 -------------------------------
 
-mobs:register_egg("happy_mob:happy", "Happy Mob", "happy_mob_inv.png", 0)
+mobs:register_egg("happy_mob:ourico", "Ovo para Ouriço", "mobs_chicken_egg.png", 0)
 
 -------------------------------
 -- LOGS FINAIS
