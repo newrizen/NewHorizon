@@ -1,15 +1,16 @@
 # New Horizon
-Developing a game for Luanti
+A voxel game made in Lua using the Luanti engine to introduce unique mechanics and a world that blends fantasy and reality.
 
 ## Key differentiators
+
 - Walk around the world in a straight line and traverse the world by digging
+- Wall kick jump: Jump 2 blocks wall (space 2x)
 - Climb some walls and trees (holding space)
 - Throw rocks: Placing (right-click) or throwing (Q key)
 - Trees fall when cut down, so it's best to run
 - Model and skin slightly similar to Hytale, but taller
 - Mobs might spawn, but I'm not sure if it works properly yet
 - Run (W two times)
-- Wall kick jump: Jump 2 blocks wall (space 2x)
 - And a few more details...
 
 ## How to Open
