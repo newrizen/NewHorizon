@@ -53,6 +53,8 @@ minetest.register_node("nodes:dirt", {
 })
 
 
+
+
 --minetest.register_node("nodes:pebble", {
 --    description = "Seixo",
 --    tiles = {"seixo.png"},
@@ -264,6 +266,31 @@ minetest.register_node("nodes:leaves", {
     post_effect_color = {a = 15, r = 15, g = 15, b = 15},
 })
 
+-- Folhas com 4 blueberry
+minetest.register_node("nodes:leaves_blueberry4", {
+    description = "Folhas com 4 mirtilos",
+    drawtype = "allfaces_optional",
+    waving = 1,
+    tiles = {"folhasblueberry4.png"},
+    groups = {snappy = 3},
+    drop = {
+        items = {
+            {items = {"nodes:blueberry 4"}},
+            {items = {"items:stick"}},
+        }
+    },
+    walkable = false,
+    alpha = 30,
+    paramtype = "light",
+    liquidtype = "source",
+    liquid_alternative_flowing = "nodes:leaves_blueberry4",
+    liquid_alternative_source = "nodes:leaves_blueberry4",
+    liquid_viscosity = 3,
+    liquid_renewable = false,
+    liquid_range = 0,
+    post_effect_color = {a = 15, r = 15, g = 15, b = 15},
+})
+
 -- Folhas com 1 noz
 minetest.register_node("nodes:leaves_nut", {
     description = "Folhas com noz",
@@ -365,6 +392,126 @@ minetest.register_globalstep(function(dtime)
 end)
 
 
+minetest.register_node("nodes:apple", {
+    description = "Maçã",
+    drawtype = "mesh",
+    mesh = "apple.obj",
+    tiles = {"AppleTexture.png"},
+    
+    paramtype = "light",
+    paramtype2 = "facedir",
+    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.125, -0.5, -0.125, 0.125, -0.25, 0.125}
+    },
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.125, -0.5, -0.125, 0.125, -0.25, 0.125}
+    },
+    
+    -- Tornar comestível
+    on_use = minetest.item_eat(2),  -- Recupera 2 pontos de vida (1 coração)
+})
+
+minetest.register_node("nodes:blueberry", {
+    description = "Mirtilo",
+    drawtype = "mesh",
+    mesh = "blueberry.obj",
+    tiles = {"BlueberryTexture.png"},
+    
+    paramtype = "light",
+    paramtype2 = "facedir",
+    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    --sounds = default.node_sound_wood_defaults(),
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.03, -0.5, -0.03, 0.03, -0.44, 0.03}
+    },
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.03, -0.5, -0.03, 0.03, -0.44, 0.03}
+    },
+    
+    -- Tornar comestível
+    on_use = minetest.item_eat(1),  -- Recupera 1 pontos de vida (meio coração)
+})
+
+
+minetest.register_node("nodes:coconut", {
+    description = "Coco",
+    drawtype = "mesh",
+    mesh = "coconut.obj",
+    tiles = {"CocoTexture.png"},
+    
+    paramtype = "light",
+    paramtype2 = "facedir",
+    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    --sounds = default.node_sound_wood_defaults(),
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.25, -0.5, -0.25, 0.25, 0, 0.25}
+    },
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.25, -0.5, -0.25, 0.25, 0, 0.25}
+    },
+    
+    -- Tornar comestível
+    on_use = minetest.item_eat(3),  -- Recupera 3 pontos de vida (1.5 coração)
+})
+
+
+minetest.register_node("nodes:palm_trunk", {
+    description = "Tronco de coqueiro",
+    drawtype = "mesh",
+    mesh = "palm_trunk.obj",
+    tiles = {"coqueirotexture.png"},
+    
+    paramtype = "light",
+    paramtype2 = "facedir",
+    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    --sounds = default.node_sound_wood_defaults(),
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.25, -0.5, -0.25, 0.25, 0.5, 0.25}
+    },
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.25, -0.5, -0.25, 0.25, 0.5, 0.25}
+    },
+})
+
+minetest.register_node("nodes:palm_leaf", {
+    description = "Folha de coqueiro",
+    drawtype = "mesh",
+    mesh = "palm_leaf.obj",
+    tiles = {"PalmLeafTexture.png"},
+    
+    paramtype = "light",
+    sunlight_propagates = true,
+    shaded = false,  -- Desabilita sombreamento por face
+    backface_culling = false,  -- Renderiza ambos os lados das faces
+    use_texture_alpha = "blend",
+    paramtype2 = "facedir",
+    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    --sounds = default.node_sound_wood_defaults(),
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.5, -0.5, -0.5, 0.5, -0.3, 0.5}
+    },
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.5, -0.5, -0.5, 0.5, -0.3, 0.5}
+    },
+})
+
+
 minetest.register_node("nodes:snow", {
     description = "Neve",
     tiles = {"neve.png"},
@@ -415,6 +562,7 @@ minetest.register_node("nodes:water", {
     liquid_alternative_source = "nodes:water",
     liquid_viscosity = 1,
     post_effect_color = {a=64, r=0, g=0, b=255},
+    drowning = 1,  -- ADICIONE ESTA LINHA (dano por segundo quando sem ar)
     groups = {water=1, liquid=1},
 })
 
@@ -444,11 +592,11 @@ minetest.register_node("nodes:water_flowing", {
     liquid_alternative_source = "nodes:water",
     liquid_viscosity = 1,
     post_effect_color = {a=64, r=0, g=0, b=255},
+    drowning = 1,  -- ADICIONE ESTA LINHA
     groups = {water=1, liquid=1, not_in_creative_inventory=1},
-    })
-    
-    
-    minetest.register_node("nodes:water2", {
+})
+
+minetest.register_node("nodes:water2", {
     description = "Água doce",
     drawtype = "liquid",
     tiles = {"agua2.png"},
@@ -465,6 +613,7 @@ minetest.register_node("nodes:water_flowing", {
     liquid_alternative_source = "nodes:water2",
     liquid_viscosity = 1,
     post_effect_color = {a=64, r=0, g=0, b=255},
+    drowning = 1,  -- ADICIONE ESTA LINHA
     groups = {water=1, liquid=1},
 })
 
@@ -479,7 +628,7 @@ minetest.register_node("nodes:water2_flowing", {
             animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length=2.0}
         },
         {
-            name = "agua_flowing_animated.png",
+            name = "agua2_flowing_animated.png",  -- Corrigido (estava agua_flowing)
             backface_culling = true,
             animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length=2.0}
         },
@@ -494,8 +643,9 @@ minetest.register_node("nodes:water2_flowing", {
     liquid_alternative_source = "nodes:water2",
     liquid_viscosity = 1,
     post_effect_color = {a=64, r=0, g=0, b=255},
+    drowning = 1,  -- ADICIONE ESTA LINHA
     groups = {water=1, liquid=1, not_in_creative_inventory=1},
-    })
+})
     
     
     minetest.register_node("nodes:lava", {
@@ -549,17 +699,227 @@ minetest.register_node("nodes:lava_flowing", {
 
 })
 
+
+---------
+-- Baú geral
+--------
+
+minetest.register_node("nodes:oak_chest", {
+    description = "Baú de Carvalho",
+    drawtype = "mesh",
+    mesh = "chest.glb",
+    tiles = {"ChestTexture.png"},
+    
+    paramtype = "light",
+    paramtype2 = "facedir",
+    groups = {choppy = 2, oddly_breakable_by_hand = 1},
+    --sounds = default.node_sound_wood_defaults(),
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5}
+    },
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5}
+    },
+    
+    -- Criar inventário quando o node é construído
+    on_construct = function(pos)
+        local meta = minetest.get_meta(pos)
+        local inv = meta:get_inventory()
+        
+        -- Criar inventário com 32 slots (8x4)
+        inv:set_size("main", 8*2) -- O bau é quadrado escolhi 4x4, mas na forma do inventário 8x2  
+        
+        -- Adiciona páginas com textos pré-definidos
+        local page1 = items.create_page_with_text(
+            "Dia 1: Encontrei este lugar abandonado. " ..
+            "Parece que alguém viveu aqui há muito tempo atrás."
+        )
+        
+        local page2 = items.create_page_with_text(
+            "Dia 15: Os suprimentos estão acabando. " ..
+            "Preciso encontrar uma saída antes que seja tarde demais."
+        )
+        
+        local page3 = items.create_page_with_text(
+            "Dia 30: Ouvi sons estranhos durante a noite. " ..
+            "Não estou sozinho aqui..."
+        )
+        
+        inv:set_stack("main", 1, page1)
+        inv:set_stack("main", 2, page2)
+        inv:set_stack("main", 3, page3)
+        
+	-- Adiciona páginas em branco
+	inv:set_stack("main", 4, ItemStack("items:page 5"))  -- 5 páginas em branco
+        
+        inv:set_stack("main", 5, ItemStack("nodes:apple 2"))  -- 2 maças
+        inv:set_stack("main", 6, ItemStack("nodes:blueberry 2"))  -- 2 mitilos
+        inv:set_stack("main", 7, ItemStack("nodes:coconut 2"))  -- 2 cocos
+        inv:set_stack("main", 8, ItemStack("nodes:palm_trunk 1"))
+        inv:set_stack("main", 9, ItemStack("nodes:palm_leaf 1"))
+        
+        -- Definir formspec do inventário
+        meta:set_string("formspec",
+            "size[8,9]"..
+            "list[current_name;main;0,0.3;8,2;]"..
+            "list[current_player;main;0,4.85;8,1;]"..
+            "list[current_player;main;0,6.08;8,3;8]"..
+            "listring[current_name;main]"..
+            "listring[current_player;main]"
+        )
+        
+        meta:set_string("infotext", "Baú de Carvalho")
+    end,
+    
+    -- Verificar se pode cavar (não permitir se tiver itens)
+    can_dig = function(pos, player)
+        local meta = minetest.get_meta(pos)
+        local inv = meta:get_inventory()
+        return inv:is_empty("main")
+    end,
+    
+    -- Ao clicar com botão direito
+    on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+        -- Tocar som de abertura
+        --minetest.sound_play("default_chest_open", {
+        --    pos = pos,
+        --    gain = 0.3,
+        --    max_hear_distance = 10,
+        --}, true)
+        
+        -- Animar abertura do baú
+        local objects = minetest.get_objects_inside_radius(pos, 0.5)
+        for _, obj in ipairs(objects) do
+            if obj:get_luaentity() and obj:get_luaentity().name == "nodes:oak_chest_entity" then
+                obj:remove()
+            end
+        end
+        
+        -- Criar entidade para animação
+        local entity = minetest.add_entity(pos, "nodes:oak_chest_entity")
+        if entity then
+            entity:get_luaentity().node_pos = pos
+            entity:set_animation({x=0, y=0.25}, 1, 0, true) -- 0 a 0.25s a 30fps = frames 0-7.5
+        end
+        
+        -- Abrir inventário
+        local meta = minetest.get_meta(pos)
+        local player_name = clicker:get_player_name()
+        minetest.show_formspec(player_name, "nodes:oak_chest_"..minetest.pos_to_string(pos),
+            meta:get_string("formspec"))
+        
+        return itemstack
+    end,
+    
+    -- Preservar inventário ao cavar
+    preserve_metadata = function(pos, oldnode, oldmeta, drops)
+        local meta = minetest.get_meta(pos)
+        local inv = meta:get_inventory()
+        local items = {}
+        
+        for i = 1, inv:get_size("main") do
+            local stack = inv:get_stack("main", i)
+            if not stack:is_empty() then
+                table.insert(items, stack:to_string())
+            end
+        end
+        
+        if #items > 0 then
+            drops[1]:get_meta():set_string("items", minetest.serialize(items))
+        end
+    end,
+    
+    -- Restaurar inventário ao colocar
+    after_place_node = function(pos, placer, itemstack, pointed_thing)
+        local meta = minetest.get_meta(pos)
+        local item_meta = itemstack:get_meta()
+        local items = item_meta:get_string("items")
+        
+        if items ~= "" then
+            items = minetest.deserialize(items)
+            local inv = meta:get_inventory()
+            
+            for i, item_str in ipairs(items) do
+                inv:set_stack("main", i, ItemStack(item_str))
+            end
+        end
+    end,
+})
+
+-- Entidade invisível para animação
+minetest.register_entity("nodes:oak_chest_entity", {
+    initial_properties = {
+        visual = "mesh",
+        mesh = "chest.glb",
+        textures = {"ChestTexture.png"},
+        visual_size = {x=1, y=1, z=1},
+        physical = false,
+        collide_with_objects = false,
+        pointable = false,
+        static_save = false,
+    },
+    
+    node_pos = nil,
+    timer = 0,
+    
+    on_activate = function(self, staticdata)
+        self.object:set_armor_groups({immortal=1})
+    end,
+    
+    on_step = function(self, dtime)
+        self.timer = self.timer + dtime
+        
+        -- Remover após animação (0.25s + margem)
+        if self.timer > 0.3 then --0.3
+            self.object:remove()
+            
+            -- Tornar o node visível novamente
+            if self.node_pos then
+                local node = minetest.get_node(self.node_pos)
+                if node.name == "nodes:oak_chest" then
+                    -- Node já está visível, não precisa fazer nada
+                end
+            end
+        end
+    end,
+})
+
+-- Som de fechamento ao sair do formspec (opcional)
+--minetest.register_on_player_receive_fields(function(player, formname, fields)
+--    if formname:find("nodes:oak_chest_") then
+--        if fields.quit then
+--            local pos_str = formname:gsub("nodes:oak_chest_", "")
+--            local pos = minetest.string_to_pos(pos_str)
+--            
+--            if pos then
+--                minetest.sound_play("default_chest_close", {
+--                    pos = pos,
+--                    gain = 0.3,
+--                    max_hear_distance = 10,
+--                }, true)
+--            end
+--        end
+--    end
+--end)
+
+
+------------
+-- Porta
+------------
+
 minetest.register_node("nodes:oak_door", {
     description = "Porta de Carvalho",
     initial_properties = {
         visual = "mesh",
         mesh = "porta_tablada_carvalho.obj",
         textures = {"porta_tablada_carvalho.png"},
-        visual_size = {x=1, y=2}, -- ajuste
+        --visual_size = {x=1, y=2}, -- ajuste
         groups = {choppy = 2},
     },
 })
-
 
 ---------------------------
 -- FUNÇÃO DE ARREMESSO
@@ -717,7 +1077,7 @@ minetest.register_entity("nodes:pebble_entity", {
             self._stuck = true
             self.object:set_velocity({x=0, y=0, z=0})
             self.object:set_acceleration({x=0, y=0, z=0})
-            minetest.sound_play("default_dug_node", {pos = pos, gain = 0.5})
+            --minetest.sound_play("default_dug_node", {pos = pos, gain = 0.5})
             return
         end
         
@@ -737,7 +1097,7 @@ minetest.register_entity("nodes:pebble_entity", {
                     self.object:set_pos(check_pos)
                     self.object:set_velocity({x=0, y=0, z=0})
                     self.object:set_acceleration({x=0, y=0, z=0})
-                    minetest.sound_play("default_dug_node", {pos = check_pos, gain = 0.5})
+                    --minetest.sound_play("default_dug_node", {pos = check_pos, gain = 0.5})
                     return
                 end
             end
@@ -831,4 +1191,3 @@ minetest.register_node("nodes:pebble", {
         minetest.check_for_falling(pos)
     end,
 })
-
