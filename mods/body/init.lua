@@ -322,7 +322,7 @@ local function make_player_invisible(player)
         stepheight = 0.6,
         eye_height = 2.4,
         makes_footstep_sound = true,
-        alpha = 160,
+        --alpha = 160,
     })
     
     print("[body] Modelo padrão ocultado para " .. player:get_player_name())
