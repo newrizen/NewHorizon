@@ -3,13 +3,20 @@ A voxel game made in Lua using the Luanti engine to introduce unique mechanics a
 
 ## Key differentiators
 
-🌐 Walk around the world in a straight line and traverse the world by digging
+🌐 Walk around the world in a straight line and traverse the world by digging (press V to open the map to see this better) 
+
 🧱 Wall kick jump: Jump 2 blocks wall (space 2x)
+
 🧗 Climb some walls and trees (holding space)
+
 🪨 Throw rocks: Placing (right-click) or throwing (Q key)
+
 🌳 Trees fall when cut down, so it's best to run
+
 👤 Model and skin slightly similar to Hytale, but taller
+
 🐾 A mob might spawn, but no more interactions
+
 🏃 Run (W two times)
 
 😮 And a few more details...
