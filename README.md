@@ -9,6 +9,8 @@ A voxel game made in Lua using the Luanti engine to introduce unique mechanics a
 
 🧗 Climb some walls and trees (holding space)
 
+🍂 Falling on leaves and dry sand reduces damage
+
 🪨 Throw rocks: Placing (right-click) or throwing (Q key)
 
 🌳 Trees fall when cut down, so it's best to run
@@ -19,7 +21,7 @@ A voxel game made in Lua using the Luanti engine to introduce unique mechanics a
 
 🏃 Run (W two times)
 
-😮 And a few more details...
+And a few more details...
 
 ## How to Open
 1. First, you need to install Luanti (PC or Android).
