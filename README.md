@@ -23,11 +23,12 @@ A voxel game made in Lua using the Luanti engine to introduce unique mechanics a
 
 ## How to Open
 1. First, you need to install Luanti (PC or Android).
-2. Download all the components from this repository, place them in a folder with any name, and then place it in the "games" folder within the ".minetest" folder of Luanti.
-3. The icon will appear when you open Luanti. Create a world and play.
+2. Download all the components from this repository in "code" -> "download zip"
+3. Extract the folder and place it in the "games" folder inside the ".minetest" folder of Luanti.
+4. The icon will appear when you open Luanti. Create a world and play!
 
 ## External Mods
-Not fully integrated yet...
+The features are not fully accessible yet...
 
-- Mobs Redo API - For Minetest Game (outdated) [Github Repo](https://codeberg.org/tenplus1/mobs_redo.git)
+- Mobs Redo API - For Minetest Game (outdated version) [Github Repo](https://codeberg.org/tenplus1/mobs_redo.git)
 - Happy Mob - [Github Repo](https://github.com/cookieukw/happy_mob)
