@@ -19,6 +19,7 @@ local c_grass   = minetest.get_content_id("nodes:grass")
 local c_topgrass = minetest.get_content_id("nodes:top_grass")
 local c_dirt    = minetest.get_content_id("nodes:dirt")
 local c_pebble  = minetest.get_content_id("nodes:pebble")
+local c_oakchest  = minetest.get_content_id("nodes:oak_chest")
 local c_oakdoor  = minetest.get_content_id("nodes:oak_door")
 local c_sand    = minetest.get_content_id("nodes:sand")
 local c_wetsand = minetest.get_content_id("nodes:wet_sand")
@@ -26,9 +27,13 @@ local c_gneiss  = minetest.get_content_id("nodes:gneiss")
 local c_bedrock = minetest.get_content_id("nodes:bedrock")
 local c_wood    = minetest.get_content_id("nodes:wood")
 local c_leaves  = minetest.get_content_id("nodes:leaves")
+local c_leavesblueberry4  = minetest.get_content_id("nodes:leaves_blueberry4")
 local c_leaves_nut  = minetest.get_content_id("nodes:leaves_nut")
 local c_leaves_nut2 = minetest.get_content_id("nodes:leaves_nut2")
 local c_leaves_nut3 = minetest.get_content_id("nodes:leaves_nut3")
+local c_palmtrunk = minetest.get_content_id("nodes:palm_trunk")
+local c_palmleaf = minetest.get_content_id("nodes:palm_leaf")
+local c_coconut = minetest.get_content_id("nodes:coconut")
 local c_water   = minetest.get_content_id("nodes:water")
 local c_water2  = minetest.get_content_id("nodes:water2")
 local c_lava    = minetest.get_content_id("nodes:lava")
@@ -83,6 +88,10 @@ local function spawn_bush(area, data, pos, wx, wz)
     -- Raio do arbusto: 1 a 3 blocos
     local radius = rng:next(1, 3)
     
+    -- Contador para limitar substituições especiais
+    local max_swaps = 2
+    local swaps = 0
+    
     -- =============== GERA ARBUSTO ESFÉRICO ===============
     for y = 0, height do
         for dx = -radius, radius do
@@ -106,6 +115,19 @@ local function spawn_bush(area, data, pos, wx, wz)
                         -- Só substitui ar
                         if data[vi] == c_air then
                             data[vi] = c_leaves
+                            
+                            -- Chance de substituir por folhas com blueberry
+                            if swaps < max_swaps then
+                                local r = math.random()
+                                
+                                -- Distribuição enviesada:
+                                -- 70% = não troca (folhas normais)
+                                -- 30% = troca para blueberry
+                                if r < 0.30 then
+                                    data[vi] = c_leavesblueberry4
+                                    swaps = swaps + 1
+                                end
+                            end
                         end
                     end
                 end
@@ -425,12 +447,13 @@ minetest.register_on_generated(function(minp, maxp)
                         data[vi] = c_sand
                     elseif height <= SEA_LEVEL + 6 then
                         data[vi] = c_dirt
-                            -- ===============================
-			    -- Adicionar PEPPLES (SEIXOS) raros
-			    -- ===============================
+                        
+                     -- -------------------------------
+	             -- Adicionar PEBBLES (SEIXOS) raros
+	             -- ---------------------------------
 
 			        -- Marca posição para adicionar pebble depois
-			    if math.random() < 0.01 then  -- 50% de chance
+			    if math.random() < 0.005 then  -- 0.5% de chance
 				table.insert(pebble_positions, {x=x, y=height+1, z=z})
 			    end
                     elseif height <= SEA_LEVEL + 7 then
@@ -563,7 +586,7 @@ minetest.register_on_generated(function(minp, maxp)
             local node_at_p = minetest.get_node(p).name
             if node_at_p == "air" or node_at_p == "nodes:air" then
                 -- use o nome do nó correto; você tinha "nodes:oak_door" — ajuste se o nome for outro
-                minetest.set_node(p, {name = "nodes:oak_door"})
+                minetest.set_node(p, {name = "nodes:oak_chest"})
             end
         end
     end)
