@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/newrizen/NewHorizon/main/menu/header.png" alt="New Horizon Header">
+  <img 
+    src="https://raw.githubusercontent.com/newrizen/NewHorizon/main/menu/header.png"
+    alt="New Horizon Header"
+    width="400">
 </p>
 
 <h1 align="center">New Horizon</h1>
