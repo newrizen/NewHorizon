@@ -1,4 +1,16 @@
 # New Horizon
+[![Minetest](https://img.shields.io/badge/Minetest-5.0+-blue?logo=minetest)](https://www.minetest.net/)  
+[![Version](https://img.shields.io/badge/version-prealpha-yellow)](#)  
+
+**Autor:** Dante  
+**Versão:** pre-alpha 
+**Data:** 2025  
+
+>[!IMPORTANT]
+>The game is in the early stages of development, expect many bugs and incomplete features.
+
+## 📖 Overview
+
 A voxel game made in Lua using the Luanti engine to introduce unique mechanics and a world that blends fantasy and reality.
 
 ## Key differentiators
