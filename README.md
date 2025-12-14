@@ -1,12 +1,23 @@
-# New Horizon
-[![Minetest](https://img.shields.io/badge/Minetest-5.0+-blue?logo=minetest)](https://www.minetest.net/)  [![Version](https://img.shields.io/badge/version-prealpha-yellow)](#)  
+<p align="center">
+  <img src="https://raw.githubusercontent.com/newrizen/NewHorizon/main/menu/header.png" alt="New Horizon Header">
+</p>
 
+<h1 align="center">New Horizon</h1>
+
+<p align="center">
+  <a href="https://www.minetest.net/">
+    <img src="https://img.shields.io/badge/Minetest-5.0+-blue?logo=minetest">
+  </a>
+  <img src="https://img.shields.io/badge/version-prealpha-yellow">
+</p>
+
+<p align="center">
+  A voxel game made in Lua using the Luanti engine to introduce unique mechanics and a world that blends fantasy and reality.
+</p>
+
+ 
 >[!IMPORTANT]
 >The game is in the early stages of development, expect many bugs and incomplete features.
-
-## 📖 Overview
-
-A voxel game made in Lua using the Luanti engine to introduce unique mechanics and a world that blends fantasy and reality.
 
 ## Differentiators
 
