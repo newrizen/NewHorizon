@@ -1,22 +1,20 @@
-<p align="center">
+<div align="center">
   <img 
     src="https://raw.githubusercontent.com/newrizen/NewHorizon/main/menu/header.png"
     alt="New Horizon Header"
-    width="400">
-</p>
+    width="350">
 
-<h1 align="center">New Horizon</h1>
+# New Horizon
+## World of Mystery
 
-<p align="center">
   <a href="https://www.minetest.net/">
     <img src="https://img.shields.io/badge/Minetest-5.0+-blue?logo=minetest">
   </a>
-  <img src="https://img.shields.io/badge/version-prealpha-yellow">
-</p>
+  <img src="https://img.shields.io/badge/version-prealpha-red">
 
-<p align="center">
-  A voxel game made in Lua using the Luanti engine to introduce unique mechanics and a world that blends fantasy and reality.
-</p>
+
+  A voxel game made in Lua using the Luanti engine that introduces unique mechanics in a world that blends fantasy and reality.
+</div>
 
  
 >[!IMPORTANT]
