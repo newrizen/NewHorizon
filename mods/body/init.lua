@@ -37,7 +37,7 @@ minetest.register_item(":", {
 })
 
 ------------------------------------------------------------
--- ENTIDADE DE SOMBRA
+-- ENTIDADE DE SOMBRA (TAMBÉM CORRIGIDA)
 ------------------------------------------------------------
 minetest.register_entity("body:shadow_entity", {
     initial_properties = {
@@ -51,11 +51,18 @@ minetest.register_entity("body:shadow_entity", {
         glow = 0,
         shaded = true,
         makes_footstep_sound = false,
+        -- CRÍTICO: Colisionbox VAZIA
+        collisionbox = {0, 0, 0, 0, 0, 0},
     },
     
     on_activate = function(self, staticdata)
         self.object:set_armor_groups({immortal = 1})
         self.object:set_rotation({x = math.pi/2, y = 0, z = 0})
+    end,
+    
+    -- Não intercepta punch
+    on_punch = function(self, puncher, time_from_last_punch, tool_capabilities, dir)
+        return false
     end,
     
     on_step = function(self, dtime)
@@ -83,7 +90,6 @@ minetest.register_entity("body:shadow_entity", {
         end
     end,
 })
-
 ------------------------------------------------------------
 -- REGISTRA O NÓ DA SOMBRA (TEXTURA)
 ------------------------------------------------------------
@@ -188,12 +194,12 @@ local function rotate_head_to_look(self, player)
 end
 
 ------------------------------------------------------------
--- ENTIDADE DE CORPO
+-- ENTIDADE DE CORPO (CORRIGIDA PARA NÃO BLOQUEAR DANO)
 ------------------------------------------------------------
 minetest.register_entity("body:body_entity", {
     initial_properties = {
         visual = "mesh",
-        mesh = "skin2.gltf",
+        mesh = "skin2.glb",
         textures = {"skin2.png"},
         visual_size = {x = 2, y = 2, z = 2},
         physical = false,
@@ -204,15 +210,24 @@ minetest.register_entity("body:body_entity", {
         glow = 0,
         shaded = true,
         makes_footstep_sound = false,
+        -- CRÍTICO: Colisionbox VAZIA para não interferir
+        collisionbox = {0, 0, 0, 0, 0, 0},
     },
     
     on_activate = function(self, staticdata)
+        -- CRÍTICO: immortal = 1 garante que a entidade não pode receber dano
         self.object:set_armor_groups({immortal = 1})
         self.object:set_nametag_attributes({
             color = {a = 0, r = 255, g = 255, b = 255},
             text = "",
         })
         self.body_yaw = 0
+    end,
+    
+    -- ADICIONA: Callback para garantir que punch não seja interceptado
+    on_punch = function(self, puncher, time_from_last_punch, tool_capabilities, dir)
+        -- Não faz nada - deixa o punch passar para o jogador
+        return false
     end,
 
     on_step = function(self, dtime)
@@ -236,6 +251,25 @@ minetest.register_entity("body:body_entity", {
             self:set_animation("jump")
             return
         end
+        
+        ------------------------------------------------------------
+        -- ANIMAÇÃO DE RASTEJAR (crawling)
+        ------------------------------------------------------------
+        local props = parent:get_properties()
+        local is_crawling = props.eye_height <= 0.7
+
+        if is_crawling then
+            local horizontal = {x = vel.x, y = 0, z = vel.z}
+            local speed = vector.length(horizontal)
+
+            if speed > 0.1 then
+                self:set_animation("crawling_walk")
+            else
+                self:set_animation("crawling")
+            end
+            return
+        end
+
         
         if ctrl.sneak and vel.x < 0.1 and vel.z < 0.1 then
             self:set_animation("sneak")
@@ -303,9 +337,16 @@ minetest.register_entity("body:body_entity", {
             self.object:set_animation({x = 2.91, y = 4.91}, 0.8, 0, true)
         elseif anim == "sneak_walk_back" then
             self.object:set_animation({x = 4.91, y = 2.91}, 0.8, 0, true)
+        elseif anim == "crawling" then
+            self.object:set_animation({x = 5.25, y = 5.5}, 0.8, 5.5, false)
+        elseif anim == "crawling_walk" then
+            self.object:set_animation({x = 5.58, y = 6.08}, 0.8, 0, true)
+        elseif anim == "swimming" then
+            self.object:set_animation({x = 9, y = 9.5}, 0.8, 0, true)
         end
     end,
 })
+
 
 ------------------------------------------------------------
 -- FUNÇÃO PARA TORNAR O MODELO PADRÃO INVISÍVEL (demais configurações permanecem validas) 
@@ -320,10 +361,16 @@ local function make_player_invisible(player)
         visual_size = {x = 0, y = 0, z = 0},
         collisionbox = {-0.3, 0.0, -0.3, 0.3, 2.7, 0.3},
         stepheight = 0.6,
-        eye_height = 2.4,
+        eye_height = 2.5,
         makes_footstep_sound = true,
         --alpha = 160,
     })
+    
+        -- Offset da câmera em primeira pessoa: {x, y, z}
+    player:set_eye_offset(
+        {x = 0, y = 0, z = 0},  -- Primeira pessoa: para frente
+        {x = 0, y = 5, z = -5}    -- Terceira pessoa: para cima e tras (0, 5, -5)
+    )
     
     print("[body] Modelo padrão ocultado para " .. player:get_player_name())
 end
@@ -355,6 +402,10 @@ local function create_body(player)
         print("[body] ERRO: Não foi possível criar corpo para " .. player_name)
     end
 end
+
+
+
+
 
 ------------------------------------------------------------
 -- FUNÇÃO PARA CRIAR A SOMBRA
