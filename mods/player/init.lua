@@ -1,14 +1,95 @@
 -- Arquivo: player/init.lua
 print("[player] Mod carregado")
 
+local health_hud = {}
+local hunger_data = {} -- Tabela para armazenar os dados de fome
+local breath_hud = {}  -- Nova tabela para armazenar o HUD de respiração
+
+
+-- Função para atualizar o HUD de breath
+local function update_breath_hud(player)
+    local name = player:get_player_name()
+    if breath_hud[name] then
+        local breath = player:get_breath()
+        player:hud_change(breath_hud[name], "number", breath * 2)  -- Multiplica por 2 para ficar visual
+    end
+end
+
+-- Função para atualizar a barra de fome visual
+local function update_hunger_hud(player, hunger_level)
+    local name = player:get_player_name()
+    if not hunger_data[name] then return end
+    
+    -- Calcula quantos ícones de comida mostrar (máximo 20)
+    local hunger_icons = math.floor(hunger_level)
+    
+    -- Atualiza o HUD
+    player:hud_change(hunger_data[name].hud_id, "number", hunger_icons)
+end
+
+-- Função para curar o player ao longo do tempo
+local function heal_player(player, amount)
+    local hp = player:get_hp()
+    local new_hp = math.min(20, hp + amount)
+    player:set_hp(new_hp)
+end
+
+-- Função para diminuir a fome ao longo do tempo
+local function hunger_timer()
+    for _, player in ipairs(minetest.get_connected_players()) do
+        local name = player:get_player_name()
+        if hunger_data[name] then
+            -- Diminui 1 ponto de fome a cada 30 segundos
+            hunger_data[name].level = math.max(0, hunger_data[name].level - 1)
+            update_hunger_hud(player, hunger_data[name].level)
+            
+            -- Se a fome chegar a 0, causa dano
+            if hunger_data[name].level == 0 then
+		player:set_hp(player:get_hp() - 1)
+	    end
+
+            
+            -- Regenera vida se a fome estiver alta
+            if hunger_data[name].level >= 18 and player:get_hp() < 20 then
+                heal_player(player, 1)
+            end
+        end
+    end
+    
+    -- Chama a função novamente após 30 segundos
+    minetest.after(30, hunger_timer)
+end
+
+-- Inicia o timer de fome
+minetest.after(30, hunger_timer)
+
 minetest.register_on_joinplayer(function(player)
-    -- Ajusta o tamanho visual e hitbox do player
-    player:set_properties({
-        visual_size = {x = 1, y = 1.5},
-        collisionbox = {-0.3, 0, -0.3, 0.25, 2.7, 0.3},
-        selectionbox = {-0.3, 0, -0.3, 0.3, 2.7, 0.3},
-        eye_height = 2.4,  -- Ajusta a altura dos olhos
+    local name = player:get_player_name()
+
+    -- Remove o HUD de barras
+    player:hud_set_flags({ 
+        healthbar = false, -- Remove a barra de coração padrão
+        breathbar = false  -- Remove a barra de breath padrão
     })
+
+    -- Cria a nova barra
+    health_hud[name] = player:hud_add({
+        hud_elem_type = "statbar",
+        position = {x = 0.5, y = 1},
+        text = "blood.png",   -- Seu coração customizado
+        number = 20,             -- Vida máxima = 20
+        direction = 0,
+        size = {x = 24, y = 24},
+        offset = {x = -300, y = -88},  -- Para alinhar ao lado da barra de fome
+    })
+
+    -- Ajusta o tamanho visual e hitbox do player
+    --player:set_properties({
+       -- visual_size = {x = 1, y = 1.5},
+        --collisionbox = {-0.3, 0, -0.3, 0.25, 2.7, 0.3},
+        --selectionbox = {-0.3, 0, -0.3, 0.3, 2.7, 0.3},
+        --eye_height = 2.4,  -- Ajusta a altura dos olhos
+    --})
     
     -- Define a hotbar com 2 slots
     minetest.after(0.1, function()
@@ -24,16 +105,90 @@ minetest.register_on_joinplayer(function(player)
             jump = 1.0,
         })
     end)
+    
+    -- Adiciona a barra de fome
+    minetest.after(0.3, function()
+        -- Inicializa a fome do jogador (20 = máximo)
+        hunger_data[name] = {
+            level = 20,
+            hud_id = nil
+        }
+        
+        
+        -- Cria o HUD da barra de fome
+        hunger_data[name].hud_id = player:hud_add({
+            hud_elem_type = "statbar",
+            position = {x = 0.5, y = 1},
+            text = "food.png",  -- Você pode criar uma textura customizada
+            number = 20,  -- Número inicial de ícones (agora 20 = 20 pontos)
+            direction = 0,
+            size = {x = 24, y = 24},
+            offset = {x = 50, y = -88},  -- Posição acima da barra de vida
+        })
+        end)
+            -- Adiciona a barra de breath (respiração) ACIMA da fome
+    minetest.after(0.4, function()
+        breath_hud[name] = player:hud_add({
+            hud_elem_type = "statbar",
+            position = {x = 0.5, y = 1},
+            text = "bubble.png",  -- Você precisa criar esta textura (bolhas)
+            number = 22,  -- 11 bolhas * 2 = 22 (breath máximo)
+            direction = 0,
+            size = {x = 24, y = 24},
+            offset = {x = 50, y = -116},  -- 28 pixels acima da barra de fome (-88 - 28)
+        })
+    end)
 end)
+
+-- Remove os dados quando o jogador sai
+minetest.register_on_leaveplayer(function(player)
+    local name = player:get_player_name()
+    hunger_data[name] = nil
+    health_hud[name] = nil
+    breath_hud[name] = nil
+end)
+
+-- Função auxiliar para restaurar fome (use ao comer itens)
+function restore_hunger(player, amount)
+    local name = player:get_player_name()
+    if hunger_data[name] then
+        hunger_data[name].level = math.min(20, hunger_data[name].level + amount)
+        update_hunger_hud(player, hunger_data[name].level)
+    end
+end
+
 
 -----------------------------
 -- SISTEMA DE AUTO-PULO
 -----------------------------
 local auto_jump_cooldown = {}  -- Evita pulos repetidos muito rápidos
 
+
+-- Atualizar informações
+
 minetest.register_globalstep(function(dtime)
     for _, player in ipairs(minetest.get_connected_players()) do
         local player_name = player:get_player_name()
+        local name = player_name  -- Adiciona esta linha para consistência
+        
+                -- Atualiza breath HUD (barra de respiração)
+        if breath_hud[name] then
+            local breath = player:get_breath()
+            local head_pos = {
+                x = player:get_pos().x,
+                y = player:get_pos().y + player:get_properties().eye_height,
+                z = player:get_pos().z
+            }
+            local head_node = minetest.get_node(head_pos).name
+            
+            -- Mostra/esconde a barra baseado se está submerso
+            if minetest.get_item_group(head_node, "water") > 0 then
+                player:hud_change(breath_hud[name], "number", breath * 2)
+            else
+                -- Esconde a barra quando não está na água
+                player:hud_change(breath_hud[name], "number", 0)
+            end
+        end
         
         -- Atualiza cooldown
         if auto_jump_cooldown[player_name] then
@@ -113,7 +268,10 @@ minetest.register_globalstep(function(dtime)
                                node_name ~= "nodes:water" and
                                node_name ~= "nodes:lava" and
                                node_name ~= "nodes:leaves" and
-                               node_name ~= "nodes:pebble"
+                               node_name ~= "nodes:pebble" and
+                               node_name ~= "nodes:apple" and
+                               node_name ~= "nodes:blueberry" and
+                               node_name ~= "nodes:coconut"
                     end
                     
                     -- Define quais blocos permitem passagem
@@ -121,7 +279,10 @@ minetest.register_globalstep(function(dtime)
                         return node_name == "air" or 
                                node_name == "nodes:water" or
                                node_name == "nodes:leaves" or 
-                               node_name == "nodes:pebble"
+                               node_name == "nodes:pebble" or
+                               node_name == "nodes:apple" or
+                               node_name == "nodes:blueberry" or
+                               node_name == "nodes:coconut"
                     end
                     
                     -- CONDIÇÕES PARA PULAR:
@@ -169,34 +330,89 @@ local surface_absorption = {
 }
 
 minetest.register_on_player_hpchange(function(player, hp_change, reason)
+    local name = player:get_player_name()
+    
+    -- Processa dano de queda com absorção de superfície
     if reason.type == "fall" then
         local pos = player:get_pos()
         pos.y = pos.y - 1
         local node = minetest.get_node(pos).name
         
-        -- Pega o fator de absorção do material
         local absorption = surface_absorption[node] or 0.0
-        
-        -- Calcula o dano reduzido
-        -- hp_change é negativo (ex: -4 de dano)
-        -- absorption de 0.85 significa que 85% do impacto é absorvido
         local reduced_damage = hp_change * (1 - absorption)
-        
-        -- Garante um dano mínimo de -1 se cair de altura considerável
-        -- (evita quedas de 10 blocos em folhas não causarem dano nenhum)
+
         if hp_change < -5 and reduced_damage > -1 then
             reduced_damage = -1
         end
-        
-        -- Arredonda para baixo (menos severo para o jogador)
+
         reduced_damage = math.ceil(reduced_damage)
-        
-        return reduced_damage
+        hp_change = reduced_damage
     end
+    
+    -- CRITICAL FIX: Atualiza o HUD ANTES de retornar
+    -- Calcula o HP futuro
+    local current_hp = player:get_hp()
+    local future_hp = math.max(0, math.min(20, current_hp + hp_change))
+    
+    if health_hud[name] then
+        player:hud_change(health_hud[name], "number", future_hp)
+    end
+
+    -- Retorna o dano para ser aplicado
     return hp_change
 end, true)
 
--- Limpa cooldown quando o jogador sai
-minetest.register_on_leaveplayer(function(player)
-    auto_jump_cooldown[player:get_player_name()] = nil
+-- ADICIONA UM GLOBALSTEP PARA SINCRONIZAÇÃO CONTÍNUA DO HUD
+minetest.register_globalstep(function(dtime)
+    for _, player in ipairs(minetest.get_connected_players()) do
+        local name = player:get_player_name()
+        if health_hud[name] then
+            -- Força sincronização do HUD com o HP real a cada frame
+            local current_hp = player:get_hp()
+            player:hud_change(health_hud[name], "number", current_hp)
+        end
+    end
+end)
+
+minetest.register_on_respawnplayer(function(player)
+    local name = player:get_player_name()
+
+    -- Restaura a fome ao máximo
+    if hunger_data[name] then
+        hunger_data[name].level = 20
+        update_hunger_hud(player, 20)
+    end
+    
+    -- Atualiza HUD de vida
+    if health_hud[name] then
+        player:hud_change(health_hud[name], "number", 20)
+    end
+
+    return true
+end)
+
+minetest.register_on_dieplayer(function(player)
+    local pos = player:get_pos()
+    local inv = player:get_inventory()
+
+    local size_main = inv:get_size("main")
+    local size_craft = inv:get_size("craft")
+
+    for i = 1, size_main do
+        local stack = inv:get_stack("main", i)
+        if not stack:is_empty() then
+            minetest.add_item(pos, stack)
+            inv:set_stack("main", i, nil)
+        end
+    end
+
+    for i = 1, size_craft do
+        local stack = inv:get_stack("craft", i)
+        if not stack:is_empty() then
+            minetest.add_item(pos, stack)
+            inv:set_stack("craft", i, nil)
+        end
+    end
+
+    return true
 end)
