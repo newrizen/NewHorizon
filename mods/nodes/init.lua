@@ -412,7 +412,11 @@ minetest.register_node("nodes:apple", {
     },
     
     -- Tornar comestível
-    on_use = minetest.item_eat(2),  -- Recupera 2 pontos de vida (1 coração)
+    on_use = function(itemstack, user, pointed_thing)
+        restore_hunger(user, 2)  -- Restaura 4 pontos
+        itemstack:take_item()
+        return itemstack
+    end,
 })
 
 minetest.register_node("nodes:blueberry", {
@@ -436,9 +440,68 @@ minetest.register_node("nodes:blueberry", {
     },
     
     -- Tornar comestível
-    on_use = minetest.item_eat(1),  -- Recupera 1 pontos de vida (meio coração)
+    on_use = function(itemstack, user, pointed_thing)
+        restore_hunger(user, 1)  -- Restaura 1 ponto
+        itemstack:take_item()
+        return itemstack
+    end,
 })
 
+minetest.register_node("nodes:frango", {
+    description = "frango",
+    drawtype = "mesh",
+    mesh = "chicken_node.obj",
+    tiles = {"chicken.png"},
+    
+    paramtype = "light",
+    paramtype2 = "facedir",
+    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    --sounds = default.node_sound_wood_defaults(),
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.25, 0, -0.25, 0.25, 0, 0.25}
+    },
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.3, -0.5, -0.3, 0.3, 0, 0.3}
+    },
+    visual_size = {x = 15, y = 15},
+    -- Tornar comestível
+    on_use = function(itemstack, user, pointed_thing)
+        restore_hunger(user, 1)  -- Restaura 1 ponto
+        itemstack:take_item()
+        return itemstack
+    end,
+})
+
+minetest.register_node("nodes:raw_chicken", {
+    description = "Frango cru",
+    drawtype = "mesh",
+    mesh = "raw_chicken.obj",
+    tiles = {"raw_chicken.png"},
+    
+    paramtype = "light",
+    paramtype2 = "facedir",
+    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    --sounds = default.node_sound_wood_defaults(),
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.25, 0, -0.25, 0.25, 0, 0.25}
+    },
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.3, -0.5, -0.3, 0.3, 0, 0.3}
+    },
+    visual_size = {x = 15, y = 15},
+    -- Tornar comestível
+    on_use = function(itemstack, user, pointed_thing)
+        restore_hunger(user, 1)  -- Restaura 1 ponto
+        itemstack:take_item()
+        return itemstack
+    end,
+})
 
 minetest.register_node("nodes:coconut", {
     description = "Coco",
@@ -461,7 +524,11 @@ minetest.register_node("nodes:coconut", {
     },
     
     -- Tornar comestível
-    on_use = minetest.item_eat(3),  -- Recupera 3 pontos de vida (1.5 coração)
+    on_use = function(itemstack, user, pointed_thing)
+        restore_hunger(user, 3)  -- Restaura 3 pontos
+        itemstack:take_item()
+        return itemstack
+    end,
 })
 
 
