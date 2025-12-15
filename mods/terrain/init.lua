@@ -60,13 +60,122 @@ local function can_place_tree(area, data, pos, radius)
                 local vi = area:index(check_x, pos.y, check_z)
                 
                 -- Se já tem madeira ou folhas, não pode colocar
-                if data[vi] == c_wood or data[vi] == c_leaves then
+                if data[vi] == c_wood or data[vi] == c_leaves or data[vi] == c_palmtrunk or data[vi] == c_palmleaf then
                     return false
                 end
             end
         end
     end
     return true
+end
+
+-----------------------------
+-- FUNÇÃO DE SPAWN DE COQUEIRO
+-----------------------------
+local function spawn_palm_tree(area, data, pos, wx, wz)
+    -- Verifica se há espaço
+    if not can_place_tree(area, data, pos, 3) then
+        return
+    end
+    
+    -- Verifica se há areia abaixo do ponto de spawn
+    local below_pos = {x = pos.x, y = pos.y - 1, z = pos.z}
+    if area:contains(below_pos.x, below_pos.y, below_pos.z) then
+        local vi_below = area:index(below_pos.x, below_pos.y, below_pos.z)
+        if data[vi_below] ~= c_sand then
+            return  -- Cancela se não tiver areia embaixo
+        end
+    else
+        return  -- Cancela se a posição abaixo não está no chunk
+    end
+    
+    -- RNG determinístico por posição
+    local seed = wx * 55555 + wz * 88888
+    local rng = PseudoRandom(seed)
+    
+    -- Altura do tronco: 6 a 9 blocos
+    local height = rng:next(6, 9)
+    
+    -- =============== TRONCO ===============
+    for y = 0, height do
+        local check_pos = {x = pos.x, y = pos.y + y, z = pos.z}
+        
+        if area:contains(check_pos.x, check_pos.y, check_pos.z) then
+            local vi = area:index(check_pos.x, check_pos.y, check_pos.z)
+            if data[vi] == c_air then
+                data[vi] = c_palmtrunk
+            end
+        end
+    end
+    
+    -- =============== FOLHAS EM CRUZ (COM ROTAÇÃO) ===============
+    local top = pos.y + height + 1
+    
+    -- Tabela de direções com suas respectivas rotações em param2
+    -- param2 para facedir: 0=Norte(+Z), 1=Leste(+X), 2=Sul(-Z), 3=Oeste(-X)
+    local directions = {
+        {x = 0, z = -1, rotation = 0},  -- Norte (-Z)
+        {x = 1, z = 0, rotation = 1},   -- Leste (+X)
+        {x = 0, z = 1, rotation = 2},   -- Sul (+Z)
+        {x = -1, z = 0, rotation = 3},  -- Oeste (-X)
+    }
+    
+    -- Cria lista para armazenar folhas que precisam de rotação
+    local leaf_nodes = {}
+    
+    for _, dir in ipairs(directions) do
+        for i = 1, 3 do  -- 2 blocos em cada direção
+            local leaf_pos = {
+                x = pos.x + dir.x * i,
+                y = top,
+                z = pos.z + dir.z * i
+            }
+            
+            if area:contains(leaf_pos.x, leaf_pos.y, leaf_pos.z) then
+                local vi = area:index(leaf_pos.x, leaf_pos.y, leaf_pos.z)
+                if data[vi] == c_air then
+                    data[vi] = c_palmleaf
+                    -- Armazena posição e rotação para aplicar depois
+                    table.insert(leaf_nodes, {
+                        pos = {x = leaf_pos.x, y = leaf_pos.y, z = leaf_pos.z},
+                        rotation = dir.rotation
+                    })
+                end
+            end
+        end
+    end
+    
+    -- =============== COCOS (0 a 4 aleatórios) ===============
+    local num_coconuts = rng:next(0, 4)
+    
+    -- Posições possíveis para cocos (embaixo das folhas)
+    local possible_positions = {
+        {x = pos.x + 1, y = top - 1, z = pos.z},
+        {x = pos.x - 1, y = top - 1, z = pos.z},
+        {x = pos.x, y = top - 1, z = pos.z + 1},
+        {x = pos.x, y = top - 1, z = pos.z - 1},
+    }
+    
+    -- Embaralha as posições
+    for i = #possible_positions, 2, -1 do
+        local j = rng:next(1, i)
+        possible_positions[i], possible_positions[j] = possible_positions[j], possible_positions[i]
+    end
+    
+    -- Coloca os cocos
+    for i = 1, math.min(num_coconuts, #possible_positions) do
+        local coco_pos = possible_positions[i]
+        
+        if area:contains(coco_pos.x, coco_pos.y, coco_pos.z) then
+            local vi = area:index(coco_pos.x, coco_pos.y, coco_pos.z)
+            if data[vi] == c_air then
+                data[vi] = c_coconut
+            end
+        end
+    end
+    
+    -- Retorna lista de folhas para rotacionar depois (via minetest.set_node)
+    return leaf_nodes
 end
 
 -----------------------------
@@ -384,9 +493,42 @@ minetest.register_on_generated(function(minp, maxp)
     local CENTER_Z = (MIN_XZ + MAX_XZ) / 2
     local MAX_RADIUS = (SIZE / 2) * 0.85
 
-    -- Lista para armazenar posições de árvores e pebbles
+    -- Lista para armazenar posições de árvores, pebbles e coqueiros
     local tree_positions = {}
     local pebble_positions = {}
+    local palm_positions = {}
+    local palm_leaf_rotations = {}  -- Lista para armazenar rotações das folhas
+
+	-- ============================================
+	-- EPICENTROS DE NEVE (NOVO SISTEMA)
+	-- ============================================
+	local SNOW_RADIUS = 350
+
+	local EPICENTER_NE = {
+	    x = MAX_XZ * 0.5,
+	    z = MAX_XZ * 0.5
+	}
+
+	local EPICENTER_SW = {
+	    x = MIN_XZ * 0.5,
+	    z = MIN_XZ * 0.5
+	}
+
+	local function inside_snow_area(x, z)
+	    -- Distância ao epicentro NE
+	    local dx1 = x - EPICENTER_NE.x
+	    local dz1 = z - EPICENTER_NE.z
+	    local d1 = dx1*dx1 + dz1*dz1
+
+	    -- Distância ao epicentro SW
+	    local dx2 = x - EPICENTER_SW.x
+	    local dz2 = z - EPICENTER_SW.z
+	    local d2 = dx2*dx2 + dz2*dz2
+
+	    return (d1 <= SNOW_RADIUS*SNOW_RADIUS) or
+		   (d2 <= SNOW_RADIUS*SNOW_RADIUS)
+	end
+
 
         for z = minp.z, maxp.z do
         for x = minp.x, maxp.x do
@@ -416,14 +558,13 @@ minetest.register_on_generated(function(minp, maxp)
                         data[vi] = c_dirt
                     end
                 elseif y == height then
-                    local near_north = (z < MIN_XZ + 150)
-                    local near_south = (z > MAX_XZ - 150)
                     local is_mountain = (height > SEA_LEVEL + 8)
 
-                    if is_mountain and (near_north or near_south) then
-                        data[vi] = c_snow
-                        goto continue_top
-                    end
+		    if is_mountain and inside_snow_area(x, z) then
+			data[vi] = c_snow
+			goto continue_top
+	            end
+
 
                     if height <= SEA_LEVEL then
                         data[vi] = c_wetsand
@@ -511,15 +652,45 @@ minetest.register_on_generated(function(minp, maxp)
                 end
             end
 
+            -- Coqueiros (apenas em areia perto do nível do mar)
+            if height >= SEA_LEVEL - 2 and height <= SEA_LEVEL + 5 and height >= minp.y and height <= maxp.y then
+                local palm_density = 0.6
+
+                local noise_palms = {
+                    offset = 0,
+                    scale = 0.6,
+                    spread = {x = 15, y = 15, z = 15},
+                    seed = 33333,
+                    octaves = 2,
+                    persist = 0.4,
+                }
+
+                local palm_noise = minetest.get_perlin(noise_palms):get_2d({x = wx, y = wz})
+                if palm_noise > palm_density then
+                    table.insert(palm_positions, {x=x, y=height+1, z=z, wx=wx, wz=wz})
+                end
+            end
+
         end -- fim do for x
     end -- fim do for z
 
-    -- SEGUNDA PASSAGEM: Gera as árvores e arbustos após todo o terreno estar pronto
+    -- SEGUNDA PASSAGEM: Gera as árvores, arbustos e coqueiros após todo o terreno estar pronto
     for _, spawn_data in ipairs(tree_positions) do
         if spawn_data.type == "tree" then
             spawn_tree(area, data, spawn_data, spawn_data.wx, spawn_data.wz)
         elseif spawn_data.type == "bush" then
             spawn_bush(area, data, spawn_data, spawn_data.wx, spawn_data.wz)
+        end
+    end
+    
+    -- Gera coqueiros
+    for _, palm_data in ipairs(palm_positions) do
+        local leaf_nodes = spawn_palm_tree(area, data, palm_data, palm_data.wx, palm_data.wz)
+        -- Armazena folhas para rotacionar depois
+        if leaf_nodes then
+            for _, leaf_info in ipairs(leaf_nodes) do
+                table.insert(palm_leaf_rotations, leaf_info)
+            end
         end
     end
     
@@ -537,22 +708,21 @@ minetest.register_on_generated(function(minp, maxp)
     -- =============================
     -- TORRES DE OBSIDIANA EM 2x2
     -- =============================
-    -- (coloquei aqui DENTRO do callback para ter acesso a minp/maxp/area/data)
     local c_obsidian = minetest.get_content_id("nodes:obsidian")
 
     -- Altura da torre
     local TOWER_MIN_Y = -25
-    local TOWER_MAX_Y = 80  -- ajuste como quiser
+    local TOWER_MAX_Y = 80
 
     -- Lista das 4 posições base (cantos do quadrado)
     local tower_bases = {
-        {x = MIN_XZ,         z = MIN_XZ},         -- canto Noroeste
-        {x = MAX_XZ - 1,     z = MIN_XZ},         -- canto Nordeste
-        {x = MIN_XZ,         z = MAX_XZ - 1},     -- canto Sudoeste
-        {x = MAX_XZ - 1,     z = MAX_XZ - 1},     -- canto Sudeste
+        {x = MIN_XZ,         z = MIN_XZ},
+        {x = MAX_XZ - 1,     z = MIN_XZ},
+        {x = MIN_XZ,         z = MAX_XZ - 1},
+        {x = MAX_XZ - 1,     z = MAX_XZ - 1},
     }
 
-    -- Gera quatro torres, que na verdade é só uma no modelo toroidal (pilares da ilusão)
+    -- Gera quatro torres
     for _, base in ipairs(tower_bases) do
         for y = TOWER_MIN_Y, TOWER_MAX_Y do
             for dx = 0, 4 do
@@ -560,7 +730,6 @@ minetest.register_on_generated(function(minp, maxp)
                     local tx = base.x + dx
                     local tz = base.z + dz
 
-                    -- Só coloca se o bloco estiver dentro do chunk atual
                     if tx >= minp.x and tx <= maxp.x and
                        tz >= minp.z and tz <= maxp.z and
                        y  >= minp.y and y  <= maxp.y then
@@ -573,20 +742,30 @@ minetest.register_on_generated(function(minp, maxp)
         end
     end
 
-    -- Grava dados no voxelmanip (aqui dentro, porque temos vm/data)
+    -- Grava dados no voxelmanip
     vm:set_data(data)
     vm:write_to_map()
     vm:update_map()
 
-    -- Agora que o mapa foi escrito, coloque portas sobre cada pebble usando minetest.set_node
-    -- (minetest.set_node é mais apropriado para portas; evita lidar com metadata por voxelmanip)
+    -- Coloca baús sobre pebbles e rotaciona folhas de palmeira
     minetest.after(0, function()
+        -- Baús
         for _, pos in ipairs(pebble_positions) do
             local p = {x = pos.x, y = pos.y + 1, z = pos.z}
             local node_at_p = minetest.get_node(p).name
             if node_at_p == "air" or node_at_p == "nodes:air" then
-                -- use o nome do nó correto; você tinha "nodes:oak_door" — ajuste se o nome for outro
                 minetest.set_node(p, {name = "nodes:oak_chest"})
+            end
+        end
+        
+        -- Rotação das folhas de palmeira
+        for _, leaf_info in ipairs(palm_leaf_rotations) do
+            local node = minetest.get_node(leaf_info.pos)
+            if node.name == "nodes:palm_leaf" then
+                minetest.set_node(leaf_info.pos, {
+                    name = "nodes:palm_leaf",
+                    param2 = leaf_info.rotation
+                })
             end
         end
     end)
@@ -637,4 +816,4 @@ minetest.after(1, function()
     )
 end)
 
-print("[terrain] Geração continental com biomas e árvores carregada")
+print("[terrain] Geração continental com biomas, árvores e coqueiros carregada")
