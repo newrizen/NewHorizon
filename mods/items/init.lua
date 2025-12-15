@@ -57,7 +57,11 @@ minetest.register_craftitem("items:nut", {
     wield_scale = {x = 1, y = 1, z = 1},
 
     -- Comida: recupera 1 ponto de vida
-    on_use = minetest.item_eat(1),
+    on_use = function(itemstack, user, pointed_thing)
+        restore_hunger(user, 1)  -- Restaura 1 ponto
+        itemstack:take_item()
+        return itemstack
+    end,
 })
 
 -- Itens necessários para escrever
