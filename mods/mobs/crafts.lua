@@ -250,7 +250,7 @@ if mod_def and default.register_fence then
 	-- mob fence (looks like normal fence but collision is 2 high)
 	default.register_fence("mobs:fence_wood", {
 		description = S("Mob Fence"),
-		texture = "graveto.png", --default_wood.png
+		texture = "graveto.png",
 		material = "default:fence_wood",
 		groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 2},
 		sounds = mobs.node_sound_wood_defaults(),
@@ -265,7 +265,7 @@ end
 core.register_node("mobs:fence_top", {
 	description = S("Mob Fence Top"),
 	drawtype = "nodebox",
-	tiles = {"graveto.png"}, --default_wood.png
+	tiles = {"graveto.png"},
 	paramtype = "light",
 	is_ground_content = false,
 	groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 2, axey = 1},
