@@ -356,6 +356,16 @@ mobs:spawn({
 mobs:register_egg("happy_mob:galinha", "Orbe com Galinha", "orbspawner.png", 0)
 
 -------------------------------
+-- ITEM: OVO
+-------------------------------
+-- Você pode criar um item de ovo que as galinhas dropam
+minetest.register_craftitem("happy_mob:chicken_egg", { -- Você precisa criar este item nodes:egg
+    description = "Ovo de galinha",
+    inventory_image = "mobs_chicken_egg.png",  -- Textura
+    on_use = minetest.item_eat(2), -- Come o ovo cru (restaura 2 de fome)
+})
+
+-------------------------------
 -- MOB 4: TUBARÃO (Agressivo)
 -------------------------------
 mobs:register_mob("happy_mob:shark", {
@@ -459,7 +469,7 @@ mobs:spawn({
 mobs:register_egg("happy_mob:shark", "Orbe com Tubarão", "orbspawner.png", 0)
 
 -------------------------------
--- MOB 4: RATAZANA (Agressivo)
+-- MOB 4: RAT/RATAZANA (Agressivo)
 -------------------------------
 mobs:register_mob("happy_mob:rat", {
     type = "animal",
@@ -542,15 +552,182 @@ mobs:spawn({
 
 mobs:register_egg("happy_mob:rat", "Orbe com Ratazana", "orbspawner.png", 0)
 
+
 -------------------------------
--- ITEM: OVO (Exemplo)
+-- MOB 4: PLANARIA SLIME (Agressivo)
 -------------------------------
--- Você pode criar um item de ovo que as galinhas dropam
-minetest.register_craftitem("happy_mob:chicken_egg", { -- Você precisa criar este item nodes:egg
-    description = "Ovo de galinha",
-    inventory_image = "mobs_chicken_egg.png",  -- Crie esta textura
-    on_use = minetest.item_eat(2), -- Come o ovo cru (restaura 2 de fome)
+mobs:register_mob("happy_mob:slime", {
+    type = "monster",
+    passive = false,
+    reach = 1,
+    damage = 1,
+    attack_type = "dogfight",
+    
+    hp_min = 10,
+    hp_max = 20,
+    armor = 100,
+    
+    collisionbox = {-0.25, 0, -0.2, 0.3, 0.4, 0.2},
+    selectionbox = {-0.5, 0, -0.2, 0.5, 0.4, 0.2},
+    physical = true,
+    stepheight = 3,           -- Consegue subir no player (importante!)
+    fall_speed = -8,
+    fall_damage = 0,
+    floats = 3,
+    
+    visual = "mesh",
+    mesh = "planaria_slime_small2.obj",
+    textures = {"planaria_slime2.png"}, --{{"planaria_slime3.png","planaria_slime3.png"}}
+    rotate = 180,
+    visual_size = {x = 10, y = 10},
+    
+    -- BRILHO NOS OLHOS
+    glow = 5,  -- Intensidade de 0 a 14 (14 = mais brilhante)
+    -- TRANSPARENCIA
+    use_texture_alpha = "true",  -- Tente "blend" em vez de true -> use_texture_alpha = true,  -- Habilita transparência
+    --backface_culling = true,   -- Renderiza ambos os lados das faces
+    
+    walk_velocity = 1,
+    run_velocity = 2,
+    
+    view_range = 7,
+    water_damage = 0,
+    lava_damage = 5,
+    light_damage = 0,
+    air_damage = 0,         
+    
+    animation = {
+        speed_normal = 15,
+        stand_start = 0,
+        stand_end = 20,
+        walk_start = 21,
+        walk_end = 40,
+    },
+    
+    follow = {"nodes:raw_chicken"},
+    
+    on_rightclick = function(self, clicker)
+        if clicker:is_player() then
+            local item = clicker:get_wielded_item()
+            local name = item:get_name()
+            
+            if name == "nodes:raw_chicken" then
+                minetest.chat_send_player(clicker:get_player_name(), "O slime quer comida!")
+            else
+                minetest.chat_send_player(clicker:get_player_name(), "O.O")
+            end
+        end
+    end,
+    
+    sounds = {
+        random = "slime_som",
+        damage = "slime_hurt",
+    },
 })
+
+-- Spawn da slime (cavernas)
+mobs:spawn({
+    name = "happy_mob:slime",
+    nodes = {"air"},
+    neighbors = {"nodes:gneiss", "nodes:water"},
+    max_light = 15,
+    interval = 30,
+    chance = 2000,
+    active_object_count = 5,
+    min_height = -25,
+    max_height = -5                 
+})
+
+mobs:register_egg("happy_mob:slime", "Orbe com Slime", "orbspawner.png", 0)
+
+
+-------------------------------
+-- MOB 4: VULTO / VISAGE (Agressivo)
+-------------------------------
+mobs:register_mob("happy_mob:visage", {
+    type = "monster",
+    passive = false,
+    reach = 1,
+    damage = 5,
+    attack_type = "dogfight",
+    
+    hp_min = 20,
+    hp_max = 30,
+    armor = 100,
+    
+    collisionbox = {-0.25, -2, -0.2, 0.3, 0.4, 0.2},
+    selectionbox = {-0.5, -2, -0.2, 0.5, 0.4, 0.2},
+    physical = true,
+    stepheight = 2,           -- Consegue subir degraus para conseguir sair da agua (importante!)
+    fall_speed = -4,
+    fall_damage = 0,
+    floats = 3,
+    
+    visual = "mesh",
+    mesh = "vulto.obj",
+    textures = {"vulto.png"},
+    rotate = 180,
+    visual_size = {x = 2, y = 2},
+    
+    -- BRILHO NOS OLHOS
+    glow = 14,  -- Intensidade de 0 a 14 (14 = mais brilhante)
+    
+    -- IMPORTANTE: Propriedades para manter na água
+    fly = true,               -- Permite "voar" na água
+    fly_in = "air",   -- Voa no ar
+    
+    walk_velocity = 1,
+    run_velocity = 4,
+    
+    view_range = 16,
+    water_damage = 2,
+    lava_damage = 5,
+    light_damage = 0,
+    air_damage = 0,         
+    
+    animation = {
+        speed_normal = 15,
+        stand_start = 0,
+        stand_end = 20,
+        walk_start = 21,
+        walk_end = 40,
+    },
+    
+    follow = {"nodes:torch2"},
+    
+    on_rightclick = function(self, clicker)
+        if clicker:is_player() then
+            local item = clicker:get_wielded_item()
+            local name = item:get_name()
+            
+            if name == "nodes:torch2" then
+                minetest.chat_send_player(clicker:get_player_name(), "O vulto não quer luz!")
+            else
+                minetest.chat_send_player(clicker:get_player_name(), "...")
+            end
+        end
+    end,
+    
+    sounds = {
+        random = "vulto_som",
+        damage = "vulto_hurt",
+    },
+})
+
+-- Spawn da ratazana (grama perto de árvores)
+mobs:spawn({
+    name = "happy_mob:visage",
+    nodes = {"air"},
+    neighbors = {"nodes:gneiss", "nodes:water"},
+    max_light = 1,
+    interval = 30,
+    chance = 2000,
+    active_object_count = 2,
+    min_height = -50,
+    max_height = -25                  
+})
+
+mobs:register_egg("happy_mob:visage", "Orbe com Vulto", "orbspawner.png", 0)
 
 -------------------------------
 -- LOGS FINAIS
