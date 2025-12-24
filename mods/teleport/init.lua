@@ -41,7 +41,7 @@ minetest.register_globalstep(function(dtime)
         end
         
         -- ====== QUEDA NO VOID (espelhamento esférico) ======
-        if p.y < VOID_Y - 1 then
+        if p.y < VOID_Y + 1 then
             -- Verifica se está dentro dos limites válidos para espelhamento
             local x_valid = p.x >= MIN_XZ and p.x <= MAX_XZ
             local z_valid = p.z >= MIN_XZ and p.z <= MAX_XZ
