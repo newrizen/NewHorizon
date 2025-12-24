@@ -28,7 +28,7 @@
 
 🧗 Climb some walls and trees (holding space)
 
-🍂 Falling on leaves and dry sand reduces damage
+🍂 Falling on water, leaves and dry sand reduces damage
 
 🪨 Throw rocks: Placing (right-click) or throwing (Q key)
 
@@ -36,7 +36,7 @@
 
 👤 Model and skin slightly similar to Hytale, but taller
 
-🐾 A mob might spawn, but no more interactions
+🐾 Some mobs might spawn, but without animations yet
 
 🏃 Run (W two times)
 
