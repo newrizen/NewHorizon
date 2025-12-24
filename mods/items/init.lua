@@ -12,7 +12,7 @@ minetest.register_craftitem("items:stick", {
     description = "Graveto",
     inventory_image = "graveto.png",
     wield_image = "graveto.png",
-    wield_scale = {x = 1, y = 1, z = 1},
+    wield_scale = {x = 0.7, y = 0.7, z = 0.7},
 
     range = 5, -- AUMENTA O ALCANCE
 
@@ -29,83 +29,28 @@ minetest.register_craftitem("items:stick", {
     },
 })
 
---minetest.register_tool("items:stick", {
-    --description = "Graveto",
-    --inventory_image = "graveto.png",
-    --wield_image = "graveto.png",
-    --wield_scale = {x = 1, y = 1, z = 1},
-
-    --range = 5, -- AUMENTA O ALCANCE
-
-    --tool_capabilities = {
-       -- full_punch_interval = 1.0,
-        --max_drop_level = 0,
-        --groupcaps = {
-            --crumbly = {times = {[3] = 1.00}, uses = 0},
-            --cracky  = {times = {[3] = 2.00}, uses = 0},
-            --snappy  = {times = {[3] = 0.80}, uses = 0},
-            --choppy  = {times = {[3] = 1.50}, uses = 0},
-        --},
-        --damage_groups = {fleshy = 1},
-    --},
---})
-
-minetest.register_craftitem("items:nut", {
-    description = "Noz",
-    inventory_image = "noz.png",
-    wield_image = "noz.png",
-    wield_scale = {x = 1, y = 1, z = 1},
-
-    -- Comida: recupera 1 ponto de vida
-    on_use = function(itemstack, user, pointed_thing)
-        restore_hunger(user, 1)  -- Restaura 1 ponto
-        itemstack:take_item()
-        return itemstack
-    end,
-})
-
 -- Itens necessários para escrever
 minetest.register_craftitem("items:feather", {
     description = "Pena",
     inventory_image = "feather.png",
     wield_image = "feather.png",
-    wield_scale = {x = 1, y = 1, z = 0.01},
+    wield_scale = {x = 0.2, y = 0.2, z = 0.01},
 })
 
 minetest.register_craftitem("items:bottle", {
     description = "Frasco",
     inventory_image = "bottle.png",
     wield_image = "bottle.png",
-    wield_scale = {x = 1, y = 1, z = 2},
+    wield_scale = {x = 0.3, y = 0.3, z = 0.5},
 })
 
 minetest.register_craftitem("items:inkbottle", {
     description = "Frasco com tinta",
     inventory_image = "inkbottle.png",
     wield_image = "inkbottle.png",
-    wield_scale = {x = 1, y = 1, z = 2},
+    wield_scale = {x = 0.3, y = 0.3, z = 0.5},
 })
 
---minetest.register_craftitem("items:apple", {
---    description = "Maçã",
---    inventory_image = "inkbottle.png",
---    wield_image = "inkbottle.png",
---    wield_scale = {x = 1, y = 1, z = 2},
---})
-
---minetest.register_craftitem("items:blueberry", {
---    description = "Mirtilo",
---    inventory_image = "inkbottle.png",
---    wield_image = "inkbottle.png",
---    wield_scale = {x = 1, y = 1, z = 2},
---})
-
---minetest.register_craftitem("items:coconut", {
---    description = "Coco",
---    inventory_image = "inkbottle.png",
---    wield_image = "inkbottle.png",
---    wield_scale = {x = 1, y = 1, z = 2},
---})
 
 -- Função auxiliar para verificar se o jogador tem os itens necessários
 local function player_has_writing_tools(player)
@@ -154,7 +99,7 @@ minetest.register_craftitem("items:page", {
     description = "Página",
     inventory_image = "page.png",
     wield_image = "page.png",
-    wield_scale = {x = 1, y = 1, z = 0.01},
+    wield_scale = {x = 0.5, y = 0.5, z = 0.01},
     
     on_use = function(itemstack, user, pointed_thing)
         if not user or not user:is_player() then
@@ -195,7 +140,7 @@ minetest.register_craftitem("items:writedpage", {
     description = "Página escrita",
     inventory_image = "writedpage.png",
     wield_image = "writedpage.png",
-    wield_scale = {x = 1, y = 1, z = 0.01},
+    wield_scale = {x = 0.5, y = 0.5, z = 0.01},
     stack_max = 1,
     
     on_use = function(itemstack, user, pointed_thing)
@@ -307,7 +252,7 @@ minetest.register_craftitem("items:writedpage", {
     description = "Página escrita",
     inventory_image = "writedpage.png",
     wield_image = "writedpage.png",
-    wield_scale = {x = 1, y = 1, z = 0.01},
+    wield_scale = {x = 0.5, y = 0.5, z = 0.01},
     stack_max = 1, -- Páginas não empilham pois podem ter textos diferentes
     
     -- Ao usar o item com botão direito
