@@ -19,14 +19,22 @@ local c_grass   = minetest.get_content_id("nodes:grass")
 local c_topgrass = minetest.get_content_id("nodes:top_grass")
 local c_dirt    = minetest.get_content_id("nodes:dirt")
 local c_pebble  = minetest.get_content_id("nodes:pebble")
-local c_oakchest  = minetest.get_content_id("nodes:oak_chest")
-local c_oakdoor  = minetest.get_content_id("nodes:oak_door")
 local c_sand    = minetest.get_content_id("nodes:sand")
 local c_wetsand = minetest.get_content_id("nodes:wet_sand")
+local c_saprolite = minetest.get_content_id("nodes:saprolite")
 local c_gneiss  = minetest.get_content_id("nodes:gneiss")
+local c_basalt = minetest.get_content_id("nodes:basalt")
+local c_peridotite = minetest.get_content_id("nodes:peridotite")
 local c_bedrock = minetest.get_content_id("nodes:bedrock")
-local c_wood    = minetest.get_content_id("nodes:wood")
+local c_redrock = minetest.get_content_id("nodes:redrock")
+local c_oaktimber = minetest.get_content_id("nodes:oaktimber")
+local c_oakwood = minetest.get_content_id("nodes:oakwood")
+local c_oakplank = minetest.get_content_id("nodes:oakplank")
+local c_oakdowel = minetest.get_content_id("nodes:oakdowel")
+local c_oakchest = minetest.get_content_id("nodes:oak_chest")
+local c_oakdoor = minetest.get_content_id("nodes:oak_door")
 local c_leaves  = minetest.get_content_id("nodes:leaves")
+local c_blueberryleaves = minetest.get_content_id("nodes:blueberryleaves")
 local c_leavesblueberry4  = minetest.get_content_id("nodes:leaves_blueberry4")
 local c_leaves_nut  = minetest.get_content_id("nodes:leaves_nut")
 local c_leaves_nut2 = minetest.get_content_id("nodes:leaves_nut2")
@@ -43,7 +51,8 @@ local c_air     = minetest.CONTENT_AIR
 print("[terrain] content_ids obtidos")
 
 local entity_positions = {}
-
+local tent_generated = false
+local TENT_SEARCH_RADIUS = 256
 
 -----------------------------
 -- FUNÇÃO PARA VERIFICAR SE HÁ ESPAÇO PARA A ÁRVORE
@@ -60,7 +69,7 @@ local function can_place_tree(area, data, pos, radius)
                 local vi = area:index(check_x, pos.y, check_z)
                 
                 -- Se já tem madeira ou folhas, não pode colocar
-                if data[vi] == c_wood or data[vi] == c_leaves or data[vi] == c_palmtrunk or data[vi] == c_palmleaf then
+                if data[vi] == c_oaktimber or data[vi] == c_leaves or data[vi] == c_palmtrunk or data[vi] == c_palmleaf then
                     return false
                 end
             end
@@ -223,7 +232,7 @@ local function spawn_bush(area, data, pos, wx, wz)
                         local vi = area:index(check_pos.x, check_pos.y, check_pos.z)
                         -- Só substitui ar
                         if data[vi] == c_air then
-                            data[vi] = c_leaves
+                            data[vi] = c_blueberryleaves
                             
                             -- Chance de substituir por folhas com blueberry
                             if swaps < max_swaps then
@@ -292,7 +301,7 @@ local function spawn_tree(area, data, pos, wx, wz)
                     local vi = area:index(check_pos.x, check_pos.y, check_pos.z)
                     -- Só substitui ar ou folhas
                     if data[vi] == c_air or data[vi] == c_leaves then
-                        data[vi] = c_wood
+                        data[vi] = c_oaktimber
                     end
                 end
             end
@@ -391,6 +400,25 @@ local noise_plains = {
     persist = 0.4,
 }
 
+local noise_caves = {
+    offset = 0,
+    scale = 1,
+    spread = {x = 60, y = 30, z = 60},  -- spread menor em Y = cavernas mais horizontais
+    seed = 424242,
+    octaves = 3,
+    persist = 0.5,
+}
+
+local noise_cave_size = {
+    offset = 0,
+    scale = 1,
+    spread = {x = 50, y = 50, z = 50},  -- Varia o tamanho das cavernas por região
+    seed = 131313,
+    octaves = 2,
+    persist = 0.4,
+}
+
+
 local noise_roughness = {
     offset = 0,
     scale = 1,
@@ -476,11 +504,137 @@ local function calculate_height(wx, wz, SEA_LEVEL, CENTER_X, CENTER_Z, MAX_RADIU
 end
 
 -----------------------------
+-- FUNÇÃO PARA VERIFICAR SE É CAVERNA
+-----------------------------
+local function is_cave(x, y, z)
+    -- Apenas gera cavernas na camada de gneiss (ajuste conforme sua lógica)
+    if y > 23 or y < -37 then
+        return false
+    end
+    
+    -- Noise 3D principal para cavernas
+    local cave_noise = minetest.get_perlin(noise_caves):get_3d({x = x, y = y, z = z})
+    
+    -- Noise para variar o tamanho das cavernas
+    local size_noise = minetest.get_perlin(noise_cave_size):get_3d({x = x, y = y, z = z})
+    local size_factor = (size_noise + 1) / 2  -- Normaliza para 0-1
+    
+    -- Threshold dinâmico: ajusta a "abertura" das cavernas
+    -- Valores menores = cavernas maiores
+    -- Valores maiores = cavernas menores/raras
+    local threshold = 0.6 + (size_factor * 0.2)  -- Varia entre 0.6 e 0.8
+    
+    -- Se o noise absoluto for maior que o threshold, é caverna
+    return math.abs(cave_noise) > threshold
+end
+
+-- Modelo da tenda de coqueiro
+local function can_spawn_tent(area, data, base_pos)
+    local width = 4
+    local depth = 5
+    local height = 4 -- 3 troncos + teto
+
+    -- chão: areia molhada
+    for dx = 0, width - 1 do
+        for dz = 0, depth - 1 do
+            local vi = area:index(base_pos.x + dx, base_pos.y - 1, base_pos.z + dz)
+            if data[vi] ~= c_wetsand then
+                return false
+            end
+        end
+    end
+
+    -- volume livre
+    for dx = 0, width - 1 do
+        for dz = 0, depth - 1 do
+            for dy = 0, height do
+                local vi = area:index(base_pos.x + dx, base_pos.y + dy, base_pos.z + dz)
+                if data[vi] ~= c_air then
+                    return false
+                end
+            end
+        end
+    end
+
+    return true
+end
+
+local function spawn_tent(area, data, base_pos)
+    local width = 4
+    local depth = 5
+    local trunk_height = 3
+    local roof_y = base_pos.y + trunk_height
+
+    local corners = {
+        {0, 0},
+        {3, 0},
+        {0, 4},
+        {3, 4},
+    }
+
+    -- troncos
+    for _, c in ipairs(corners) do
+        for y = 0, trunk_height - 1 do
+            data[area:index(
+                base_pos.x + c[1],
+                base_pos.y + y,
+                base_pos.z + c[2]
+            )] = c_palmtrunk
+        end
+    end
+
+    -- teto
+    for dx = 0, width - 1 do
+        for dz = 0, depth - 1 do
+            data[area:index(
+                base_pos.x + dx,
+                roof_y,
+                base_pos.z + dz
+            )] = c_palmleaf
+        end
+    end
+end
+
+local function place_random_chest(area, data, base_pos)
+    local candidates = {}
+
+    -- espaço interno: x = 1..2, z = 1..3
+    for dx = 1, 2 do
+        for dz = 1, 3 do
+            table.insert(candidates, {dx = dx, dz = dz})
+        end
+    end
+
+    if #candidates == 0 then return end
+
+    -- escolha aleatória
+    local c = candidates[math.random(#candidates)]
+
+    local chest_pos = {
+        x = base_pos.x + c.dx,
+        y = base_pos.y,
+        z = base_pos.z + c.dz
+    }
+
+    local vi = area:index(chest_pos.x, chest_pos.y, chest_pos.z)
+    data[vi] = c_oakchest
+
+    -- garantir inicialização correta
+    minetest.after(0, function()
+        local node = minetest.get_node(chest_pos)
+        local def = minetest.registered_nodes[node.name]
+        if def and def.on_construct then
+            def.on_construct(chest_pos)
+        end
+    end)
+end
+
+-----------------------------
 -- GERAÇÃO DO MUNDO
 -----------------------------
 minetest.register_on_generated(function(minp, maxp)
     -- Otimização: ignora chunks muito altos ou muito baixos
-    if maxp.y < -25 or minp.y > 80 then return end
+    if maxp.y < -50 or minp.y > 80 then return end
 
     local vm = minetest.get_voxel_manip()
     local emin, emax = vm:read_from_map(minp, maxp)
@@ -540,17 +694,67 @@ minetest.register_on_generated(function(minp, maxp)
             local height, biome_factor = calculate_height(wx, wz, SEA_LEVEL, CENTER_X, CENTER_Z, MAX_RADIUS)
 
             -- Geração das camadas
-            for y = math.max(minp.y, -25), math.min(maxp.y, 75) do
+            for y = math.max(minp.y, -50), math.min(maxp.y, 75) do
                 local vi = area:index(x, y, z)
                 
-                if y <= -23 then
+                if y <= -50 then
+                    data[vi] = c_redrock
+                elseif y <= -48 then
+                    data[vi] = c_peridotite
+                elseif y <= -46 then
                     data[vi] = c_bedrock
-                elseif y <= -15 then
+                elseif y <= -43 then
+                    data[vi] = c_peridotite
+                elseif y <= -40 then
                     data[vi] = c_lava
-                elseif y <= -12 then
-                    data[vi] = c_bedrock
-                elseif y <= height - 6 then
-                    data[vi] = c_gneiss
+                elseif y <= -35 then
+                    data[vi] = c_basalt
+-----------------------------
+-- MODIFICAÇÃO NA GERAÇÃO DO MUNDO
+-----------------------------
+
+elseif y <= height - 7 then
+    -- Verifica se deve ser caverna
+    if is_cave(x, y, z) then
+        data[vi] = c_air
+        
+        -- Adiciona água/lava em cavernas profundas
+        if y < -30 then
+            -- 10% de chance de ter lava
+            if math.random() < 0.1 then
+                data[vi] = c_lava
+            end
+        elseif y < -25 then
+            -- 30% de chance de ter água
+            if math.random() < 0.3 then
+                data[vi] = c_water
+            end
+        end
+    else
+        data[vi] = c_gneiss
+    end
+        -- CAMADA VARIÁVEL: Saprolite (0 a 3 blocos)
+elseif y <= height - 4 then
+    -- Calcula espessura do saprolite usando ruído
+    local saprolite_noise = minetest.get_perlin({
+        offset = 0,
+        scale = 1,
+        spread = {x = 40, y = 40, z = 40},
+        seed = 9876,
+        octaves = 2,
+        persist = 0.5,
+        lacunarity = 2.0
+    }):get_3d({x = wx, y = y, z = wz})
+    
+    -- Mapeia o ruído (-1 a 1) para espessura (0 a 2)
+    local saprolite_thickness = math.floor((saprolite_noise + 1) * 1.5 + 0.5)
+    
+    -- Verifica se está dentro da espessura do saprolite
+    if y > height - 4 - saprolite_thickness then
+        data[vi] = c_saprolite
+    else
+        data[vi] = c_gneiss
+    end
                 elseif y <= height - 1 then
                     if height <= SEA_LEVEL + 5 then
                         data[vi] = c_sand
@@ -600,7 +804,7 @@ minetest.register_on_generated(function(minp, maxp)
                     elseif height <= SEA_LEVEL + 7 then
                         data[vi] = c_topgrass
                     else
-                        data[vi] = c_grass
+                        data[vi] = c_topgrass
                     end
 
                     ::continue_top::
@@ -653,7 +857,7 @@ minetest.register_on_generated(function(minp, maxp)
             end
 
             -- Coqueiros (apenas em areia perto do nível do mar)
-            if height >= SEA_LEVEL - 2 and height <= SEA_LEVEL + 5 and height >= minp.y and height <= maxp.y then
+            if height >= SEA_LEVEL - 2 and height <= SEA_LEVEL + 3 and height >= minp.y and height <= maxp.y then
                 local palm_density = 0.6
 
                 local noise_palms = {
@@ -694,13 +898,21 @@ minetest.register_on_generated(function(minp, maxp)
         end
     end
     
--- TERCEIRA PASSAGEM: Adiciona pebbles no topo
+	
+	-- TERCEIRA PASSAGEM: Adiciona pebbles no topo E baús embaixo
 	for _, pebble_pos in ipairs(pebble_positions) do
 	    if area:contains(pebble_pos.x, pebble_pos.y, pebble_pos.z) then
 		local vi = area:index(pebble_pos.x, pebble_pos.y, pebble_pos.z)
 		-- Só coloca se for ar (evita sobrescrever árvores/arbustos)
 		if data[vi] == c_air then
 		    data[vi] = c_pebble
+		    
+		    -- Adiciona baú 2 blocos abaixo (substitui o que estiver lá)
+		    local chest_y = pebble_pos.y - 2
+		    if area:contains(pebble_pos.x, chest_y, pebble_pos.z) then
+		        local chest_vi = area:index(pebble_pos.x, chest_y, pebble_pos.z)
+		        data[chest_vi] = c_oakchest  
+		    end
 		end
 	    end
 	end
@@ -711,7 +923,7 @@ minetest.register_on_generated(function(minp, maxp)
     local c_obsidian = minetest.get_content_id("nodes:obsidian")
 
     -- Altura da torre
-    local TOWER_MIN_Y = -25
+    local TOWER_MIN_Y = -50
     local TOWER_MAX_Y = 80
 
     -- Lista das 4 posições base (cantos do quadrado)
@@ -742,66 +954,110 @@ minetest.register_on_generated(function(minp, maxp)
         end
     end
 
+if not tent_generated then
+    -- limite de busca: perto da origem
+    if math.abs(minp.x) > TENT_SEARCH_RADIUS or
+       math.abs(minp.z) > TENT_SEARCH_RADIUS then
+        return
+    end
+
+    -- varrer posições deste chunk
+    for z = minp.z, maxp.z do
+        for x = minp.x, maxp.x do
+            -- prioridade: mais perto da origem
+            if (x * x + z * z) <= (TENT_SEARCH_RADIUS * TENT_SEARCH_RADIUS) then
+                for y = SEA_LEVEL + 1, SEA_LEVEL + 6 do
+                    local base_pos = {x = x, y = y, z = z}
+
+                    if area:contains(x, y, z) then
+                        if can_spawn_tent(area, data, base_pos) then
+			    spawn_tent(area, data, base_pos)
+			    place_random_chest(area, data, base_pos)
+			    tent_generated = true
+                            break
+                        end
+                    end
+                end
+            end
+            if tent_generated then break end
+        end
+        if tent_generated then break end
+    end
+end
+
     -- Grava dados no voxelmanip
     vm:set_data(data)
     vm:write_to_map()
     vm:update_map()
 
-    -- Coloca baús sobre pebbles e rotaciona folhas de palmeira
-    minetest.after(0, function()
-        -- Baús
-        for _, pos in ipairs(pebble_positions) do
-            local p = {x = pos.x, y = pos.y + 1, z = pos.z}
-            local node_at_p = minetest.get_node(p).name
-            if node_at_p == "air" or node_at_p == "nodes:air" then
-                minetest.set_node(p, {name = "nodes:oak_chest"})
-            end
-        end
-        
-        -- Rotação das folhas de palmeira
-        for _, leaf_info in ipairs(palm_leaf_rotations) do
-            local node = minetest.get_node(leaf_info.pos)
-            if node.name == "nodes:palm_leaf" then
-                minetest.set_node(leaf_info.pos, {
-                    name = "nodes:palm_leaf",
-                    param2 = leaf_info.rotation
-                })
-            end
-        end
-    end)
-
+	-- Rotaciona folhas de palmeira e inicializa baús
+	minetest.after(0, function()
+	    -- Rotação das folhas de palmeira
+	    for _, leaf_info in ipairs(palm_leaf_rotations) do
+		local node = minetest.get_node(leaf_info.pos)
+		if node.name == "nodes:palm_leaf" then
+		    minetest.set_node(leaf_info.pos, {
+		        name = "nodes:palm_leaf",
+		        param2 = leaf_info.rotation
+		    })
+		end
+	    end
+	    
+	    -- Inicializa inventários dos baús
+	    for _, pebble_pos in ipairs(pebble_positions) do
+		local chest_pos = {x = pebble_pos.x, y = pebble_pos.y - 2, z = pebble_pos.z}
+		local node = minetest.get_node(chest_pos)
+		
+		if node.name == "nodes:oak_chest" then
+		    -- Força re-construção do baú para criar o inventário
+		    local node_def = minetest.registered_nodes["nodes:oak_chest"]
+		    if node_def and node_def.on_construct then
+		        node_def.on_construct(chest_pos)
+		    end
+		end
+	    end
+	end)
 end) -- FIM do register_on_generated
 
 
-if not minetest.registered_nodes["nodes:top_grass"] then
+if not minetest.registered_nodes["nodes:grass"] then
     minetest.log("warning", "[terrain] nodes:top_grass não está registrado.")
 end
 
 minetest.register_lbm({
     name = "terrain:grass_conversion",
-    nodenames = {"nodes:grass"},
+    nodenames = {"nodes:top_grass"},
     run_at_every_load = true,
-    action = function(pos, node)
-        local below = {x = pos.x, y = pos.y - 1, z = pos.z}
-        local name_below = minetest.get_node(below).name
-        
-        if name_below ~= "nodes:dirt" then return end
+    action = function(pos)
+        local x, y, z = pos.x, pos.y - 1, pos.z
+        local n
 
-        local neighbors = {
-            {x = below.x + 1, y = below.y, z = below.z},
-            {x = below.x - 1, y = below.y, z = below.z},
-            {x = below.x, y = below.y, z = below.z + 1},
-            {x = below.x, y = below.y, z = below.z - 1},
-        }
+        n = minetest.get_node({x = x + 1, y = y, z = z}).name
+        if n == "nodes:top_grass" or n == "nodes:grass" then
+            minetest.set_node(pos, {name = "nodes:grass"})
+            return
+        end
 
-        for _, npos in ipairs(neighbors) do
-            if minetest.get_node(npos).name == "air" then
-                minetest.set_node(pos, {name = "nodes:top_grass"})
-                return
-            end
+        n = minetest.get_node({x = x - 1, y = y, z = z}).name
+        if n == "nodes:top_grass" or n == "nodes:grass" then
+            minetest.set_node(pos, {name = "nodes:grass"})
+            return
+        end
+
+        n = minetest.get_node({x = x, y = y, z = z + 1}).name
+        if n == "nodes:top_grass" or n == "nodes:grass" then
+            minetest.set_node(pos, {name = "nodes:grass"})
+            return
+        end
+
+        n = minetest.get_node({x = x, y = y, z = z - 1}).name
+        if n == "nodes:top_grass" or n == "nodes:grass" then
+            minetest.set_node(pos, {name = "nodes:grass"})
+            return
         end
     end
 })
+
 
 minetest.after(1, function()
     print("[terrain] Pré-gerando área de spawn...")
@@ -812,8 +1068,7 @@ minetest.after(1, function()
             if calls_remaining == 0 then
                 print("[terrain] Área de spawn pré-gerada com sucesso!")
             end
-        end
-    )
+    end)
 end)
 
 print("[terrain] Geração continental com biomas, árvores e coqueiros carregada")
