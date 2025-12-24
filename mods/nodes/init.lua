@@ -9,12 +9,26 @@ minetest.register_node("nodes:grass", {
     description = "Gramado",
     tiles = {"grama.png"},
     groups = {crumbly = 3},
+    
+    -- Mecânica da grama morrer na sombra
+    paramtype = "light",
+    on_construct = function(pos)
+        local node = minetest.get_node(pos)
+        minetest.get_node_timer(pos):start(math.random(30, 60))
+    end,
+
+    on_timer = function(pos, elapsed)
+        local light = minetest.get_node_light(pos)
+        if light and light <= 1 then
+            minetest.set_node(pos, {name = "nodes:dirt"})
+        end
+        return true
+    end,
 })
 
 
 minetest.register_node("nodes:top_grass", {
     description = "Grama",
-
     -- 6 texturas → top, bottom, right, left, back, front
     tiles = {
         "grama.png",      -- topo (0)
@@ -24,24 +38,61 @@ minetest.register_node("nodes:top_grass", {
         "grama_terra_lado.png",     -- lado atrás (4)
         "grama_terra_lado.png"      -- lado frente (5)
     },
-
     groups = {crumbly = 3, soil = 1},
-
     -- Quando a grama é bloqueada da luz, vira terra
-    drop = "nodes:dirt",
-
-    -- Mecânica opcional: grama morrer na sombra
+    --drop = "nodes:dirt",
+    
+    -- Mecânica da grama morrer na sombra
     paramtype = "light",
     on_construct = function(pos)
         local node = minetest.get_node(pos)
-        minetest.get_node_timer(pos):start(5)
+        minetest.get_node_timer(pos):start(math.random(3, 6))
     end,
-
     on_timer = function(pos, elapsed)
         local light = minetest.get_node_light(pos)
-        if light and light < 4 then
+        
+        -- Verifica se há ar diretamente acima
+        local above = {x = pos.x, y = pos.y + 1, z = pos.z}
+        local node_above = minetest.get_node(above).name
+        
+        -- Se tiver luz > 4 e ar acima, verifica vizinhos para virar grass
+        if light and light > 4 and node_above == "air" then
+            -- Verifica vizinhos laterais e diagonais ABAIXO (8 posições)
+            local neighbors_below = {
+                -- Laterais abaixo
+                {x = pos.x + 1, y = pos.y - 1, z = pos.z},
+                {x = pos.x - 1, y = pos.y - 1, z = pos.z},
+                {x = pos.x, y = pos.y - 1, z = pos.z + 1},
+                {x = pos.x, y = pos.y - 1, z = pos.z - 1},
+                -- Diagonais abaixo
+                {x = pos.x + 1, y = pos.y - 1, z = pos.z + 1},
+                {x = pos.x + 1, y = pos.y - 1, z = pos.z - 1},
+                {x = pos.x - 1, y = pos.y - 1, z = pos.z + 1},
+                {x = pos.x - 1, y = pos.y - 1, z = pos.z - 1},
+            }
+            
+            -- Verifica se há grama em algum vizinho abaixo
+            local has_grass_below = false
+            for _, npos in ipairs(neighbors_below) do
+                local neighbor_name = minetest.get_node(npos).name
+                if neighbor_name == "nodes:grass" or neighbor_name == "nodes:top_grass" then
+                    has_grass_below = true
+                    break
+                end
+            end
+            
+            -- Se encontrar grama abaixo, converte para grass
+            if has_grass_below then
+                minetest.set_node(pos, {name = "nodes:grass"})
+                return true
+            end
+        end
+        
+        -- Verifica se deve morrer por falta de luz
+        if light and light <= 1 then
             minetest.set_node(pos, {name = "nodes:dirt"})
         end
+        
         return true
     end,
 })
@@ -50,8 +101,81 @@ minetest.register_node("nodes:dirt", {
     description = "Terra",
     tiles = {"terra.png"},
     groups = {crumbly = 2},
+    
+    -- Mecânica opcional: grama morrer na sombra
+    paramtype = "light",
+    on_construct = function(pos)
+        local node = minetest.get_node(pos)
+        minetest.get_node_timer(pos):start(math.random(30, 60))
+    end,
+    on_timer = function(pos, elapsed)
+        -- Verifica se há algum nó acima (não pode ser ar)
+        local above = {x = pos.x, y = pos.y + 1, z = pos.z}
+        local node_above = minetest.get_node(above).name
+        
+        -- Se houver qualquer coisa acima (exceto ar), não converte
+        if node_above ~= "air" then
+            return true -- Continua o timer mas não converte
+        end
+        
+        local light = minetest.get_node_light(pos)
+        
+        -- Verifica luz suficiente
+        if light and light > 4 then
+            -- Verifica vizinhos laterais e diagonais (8 posições)
+            local neighbors = {
+                -- Laterais
+                {x = pos.x + 1, y = pos.y, z = pos.z},
+                {x = pos.x - 1, y = pos.y, z = pos.z},
+                {x = pos.x, y = pos.y, z = pos.z + 1},
+                {x = pos.x, y = pos.y, z = pos.z - 1},
+                -- Diagonais
+                {x = pos.x + 1, y = pos.y, z = pos.z + 1},
+                {x = pos.x + 1, y = pos.y, z = pos.z - 1},
+                {x = pos.x - 1, y = pos.y, z = pos.z + 1},
+                {x = pos.x - 1, y = pos.y, z = pos.z - 1},
+                -- Laterais abaixo
+                {x = pos.x + 1, y = pos.y - 1, z = pos.z},
+                {x = pos.x - 1, y = pos.y - 1, z = pos.z},
+                {x = pos.x, y = pos.y - 1, z = pos.z + 1},
+                {x = pos.x, y = pos.y - 1, z = pos.z - 1},
+                -- Diagonais abaixo
+                {x = pos.x + 1, y = pos.y - 1, z = pos.z + 1},
+                {x = pos.x + 1, y = pos.y - 1, z = pos.z - 1},
+                {x = pos.x - 1, y = pos.y - 1, z = pos.z + 1},
+                {x = pos.x - 1, y = pos.y - 1, z = pos.z - 1},
+                -- Laterais acima
+                {x = pos.x + 1, y = pos.y + 1, z = pos.z},
+                {x = pos.x - 1, y = pos.y + 1, z = pos.z},
+                {x = pos.x, y = pos.y + 1, z = pos.z + 1},
+                {x = pos.x, y = pos.y + 1, z = pos.z - 1},
+                -- Diagonais acima
+                {x = pos.x + 1, y = pos.y + 1, z = pos.z + 1},
+                {x = pos.x + 1, y = pos.y + 1, z = pos.z - 1},
+                {x = pos.x - 1, y = pos.y + 1, z = pos.z + 1},
+                {x = pos.x - 1, y = pos.y + 1, z = pos.z - 1},
+                
+            }
+            
+            -- Verifica se há grama em algum vizinho
+            local has_grass_neighbor = false
+            for _, npos in ipairs(neighbors) do
+                local neighbor_name = minetest.get_node(npos).name
+                if neighbor_name == "nodes:grass" or neighbor_name == "nodes:top_grass" then
+                    has_grass_neighbor = true
+                    break
+                end
+            end
+            
+            -- Só converte se tiver grama ao lado
+            if has_grass_neighbor then
+                minetest.set_node(pos, {name = "nodes:top_grass"})
+            end
+        end
+        
+        return true -- Continua o timer
+    end,
 })
-
 
 
 
@@ -99,18 +223,37 @@ minetest.register_node("nodes:wet_sand", {
     groups = {crumbly = 2},
 })
 
+
+minetest.register_node("nodes:saprolite", {
+    description = "Saprólito",
+    tiles = {"saprolite.png"},
+    groups = {cracky = 3},
+})
+
+minetest.register_node("nodes:basalt", {
+    description = "Basalto",
+    tiles = {"basalt.png"},
+    groups = {cracky = 3},
+})
+
 minetest.register_node("nodes:gneiss", {
     description = "Gnaisse",
     tiles = {"pedra.png"},
     groups = {cracky = 3},
 })
 
---minetest.register_node("nodes:bedrock", {
-  --  description = "Bridgmanita",
-  --  tiles = {"matriz.png"},
-  --  groups = {cracky = 3}, --{unbreakable = 1, not_in_creative_inventory = 1},
-    --drop = "",
---})
+minetest.register_node("nodes:peridotite", {
+    description = "Peridotito",
+    tiles = {"peridotite.png"},
+    groups = {cracky = 3},
+})
+
+minetest.register_node("nodes:redrock", {
+    description = "Ruborita",
+    tiles = {"lava.png"},
+    groups = {unbreakable = 1, not_in_creative_inventory = 1}, --{unbreakable = 1, not_in_creative_inventory = 1},
+    drop = "",
+})
 
 
 minetest.register_node("nodes:bedrock", {
@@ -164,13 +307,13 @@ local function has_solid_support(pos, checked)
     
     -- Se tem algo sólido abaixo (que não seja tronco ou folha), está suportado
     if below_node.name ~= "air" 
-       and below_node.name ~= "nodes:wood" 
+       and below_node.name ~= "nodes:oaktimber" 
        and not below_node.name:find("nodes:leaves") then
         return true
     end
     
     -- Se tem um tronco abaixo, verifica se esse tronco tem suporte
-    if below_node.name == "nodes:wood" then
+    if below_node.name == "nodes:oaktimber" then
         if has_solid_support(below, checked) then
             return true
         end
@@ -209,10 +352,10 @@ local function make_leaves_fall(pos)
 end
 
 -- Tronco
-minetest.register_node("nodes:wood", {
-    description = "Tronco",
+minetest.register_node("nodes:oaktimber", {
+    description = "Tronco de Carvalho",
     tiles = {"tronco.png"},
-    groups = {choppy = 3, falling_node = 1},
+    groups = {choppy = 3, falling_node = 1, armor_head = 1},
     
     -- Detecta quando o tronco é quebrado ou vai cair
     after_dig_node = function(pos, oldnode, oldmetadata, digger)
@@ -222,7 +365,7 @@ minetest.register_node("nodes:wood", {
         local below_node = minetest.get_node(below)
         
         -- Se abaixo é ar ou outro tronco/folha, faz folhas caírem
-        if below_node.name == "air" or below_node.name == "nodes:wood" or below_node.name:find("nodes:leaves") then
+        if below_node.name == "air" or below_node.name == "nodes:oaktimber" or below_node.name:find("nodes:leaves") then
             make_leaves_fall(pos)
         end
     end,
@@ -234,7 +377,7 @@ minetest.register_node("nodes:wood", {
     
     on_timer = function(pos)
         local node = minetest.get_node(pos)
-        if node.name == "nodes:wood" then
+        if node.name == "nodes:oaktimber" then
             -- Se não tem suporte, vai começar a cair
             if not has_solid_support(pos) then
                 make_leaves_fall(pos)
@@ -246,7 +389,197 @@ minetest.register_node("nodes:wood", {
     end,
 })
 
--- Folhas normais
+-- Madeira
+minetest.register_node("nodes:oakwood", {
+    description = "Madeira de Carvalho",
+    tiles = {"oakwood.png"},
+    groups = {choppy = 3},
+})
+
+-- Prancha
+minetest.register_node("nodes:oakplank", {
+    description = "Prancha de Carvalho",
+    drawtype = "mesh",
+    mesh = "oakplank.obj",
+    tiles = {"oakwood.png"},
+    groups = {choppy = 3},
+
+    paramtype = "light",
+    paramtype2 = "wallmounted",
+    
+    selection_box = {
+        type = "wallmounted",
+        wall_top = {-0.5, 0, -0.5, 0.5, 0.5, 0.5},
+        wall_bottom = {-0.5, -0.5, -0.5, 0.5, 0, 0.5},
+        wall_side = {-0.5, -0.5, -0.5, 0, 0.5, 0.5},
+    },
+    
+    node_box = {
+        type = "wallmounted",
+        wall_top = {0, 0, 0, 0, 0.5, 0},
+        wall_bottom = {0, -0.5, 0, 0, 0, 0},
+        wall_side = {-0.5, 0, 0, -0.5, 0.5, 0},
+    },    
+})
+
+-- Tábua
+minetest.register_node("nodes:oakboard", {
+    description = "Tábua de Carvalho",
+    drawtype = "mesh",
+    mesh = "oakboard.obj",
+    tiles = {"oakwood.png"},
+    groups = {choppy = 3},
+    paramtype = "light",
+    paramtype2 = "facedir",
+    
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.5, -0.5, 0.38, 0.5, 0.5, 0.5},
+    },
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.5, -0.5, -0.06, 0.5, 0.5, 0.06},
+    },
+    
+    on_place = function(itemstack, placer, pointed_thing)
+        if not placer or not placer:is_player() then
+            return itemstack
+        end
+        
+        -- Detecta em qual face foi clicado
+        local under = pointed_thing.under
+        local above = pointed_thing.above
+        local click_dir = vector.subtract(above, under)
+        
+        -- Pega a direção horizontal do jogador
+        local yaw = placer:get_look_horizontal()
+        local player_dir = minetest.yaw_to_dir(yaw)
+        local player_facedir = minetest.dir_to_facedir(player_dir)
+        
+        local facedir
+        
+        if click_dir.y == 1 then
+            -- Clicado no topo (chão) - tábua deitada
+            facedir = player_facedir
+        elseif click_dir.y == -1 then
+            -- Clicado embaixo (teto) - tábua deitada invertida
+            facedir = player_facedir + 20
+        elseif click_dir.z ~= 0 then
+            -- Parede Norte/Sul (eixo Z)
+            local wall_facedir = minetest.dir_to_facedir(click_dir)
+            facedir = wall_facedir + 4
+        else
+            -- Parede Leste/Oeste (eixo X)
+            local wall_facedir = minetest.dir_to_facedir(click_dir)
+            facedir = wall_facedir + 12  -- Valor diferente para paredes X
+        end
+        
+        return minetest.item_place(itemstack, placer, pointed_thing, facedir)
+    end,
+})
+
+-- Tarugo
+minetest.register_node("nodes:oakdowel", {
+    description = "Tarugo de Carvalho",
+    drawtype = "mesh",
+    mesh = "oakdowel.obj",
+    tiles = {"oakwood.png"},
+    groups = {choppy = 3},
+    
+    paramtype = "light",
+    paramtype2 = "wallmounted",
+    
+    selection_box = {
+        type = "wallmounted",
+        wall_top = {-0.1, -0.5, -0.1, 0.1, 0.5, 0.1},
+        wall_bottom = {-0.1, -0.5, -0.1, 0.1, 0.5, 0.1},
+        wall_side = {-0.5, -0.1, -0.1, 0.5, 0.1, 0.1},
+    },
+    
+    node_box = {
+        type = "wallmounted",
+        wall_top = {-0.0625, 0.5-0.5625, -0.0625, 0.0625, 0.5, 0.0625},
+        wall_bottom = {-0.0625, -0.5, -0.0625, 0.0625, -0.5+0.5625, 0.0625},
+        wall_side = {-0.5, -0.0625, -0.0625, -0.5+0.28125, 0.5, 0.0625},
+    },
+})
+
+minetest.register_node("nodes:torch", {
+    description = "Tocha",
+    drawtype = "mesh",
+    mesh = "torch.obj",
+    tiles = {"torch.png"},
+    --inventory_image = "tocha_inventario.png",
+    --wield_image = "tocha_inventario.png",
+    
+    paramtype = "light",
+    --paramtype2 = "wallmounted",
+    sunlight_propagates = true,
+    walkable = false,
+    
+    groups = {choppy = 2, dig_immediate = 3, flammable = 1, attached_node = 1},
+    
+    --selection_box = {
+    --    type = "wallmounted",
+    --    wall_top = {-0.1, 0.5-0.6, -0.1, 0.1, 0.5, 0.1},
+    --    wall_bottom = {-0.1, -0.5, -0.1, 0.1, -0.5+0.6, 0.1},
+   --     wall_side = {-0.5, -0.1, -0.1, -0.5+0.3, 0.5, 0.1},
+    --},
+    
+    --node_box = {
+    --    type = "wallmounted",
+    --    wall_top = {-0.0625, 0.5-0.5625, -0.0625, 0.0625, 0.5, 0.0625},
+    --    wall_bottom = {-0.0625, -0.5, -0.0625, 0.0625, -0.5+0.5625, 0.0625},
+    --    wall_side = {-0.5, -0.0625, -0.0625, -0.5+0.28125, 0.5, 0.0625},
+    --},
+})
+
+minetest.register_node("nodes:torch2", {
+    description = "Tocha acesa",
+    drawtype = "mesh",
+    mesh = "torch.obj",
+    tiles = {"torchfire.png"},
+    --inventory_image = "tocha_inventario.png",
+    --wield_image = "tocha_inventario.png",
+    
+    paramtype = "light",
+    --paramtype2 = "wallmounted",
+    sunlight_propagates = true,
+    walkable = false,
+    
+    light_source = 13,  -- Luminosidade (0-14, onde 14 é máximo)
+    
+    groups = {choppy = 2, dig_immediate = 3, flammable = 1, attached_node = 1},
+    
+    --selection_box = {
+    --    type = "wallmounted",
+    --    wall_top = {-0.1, 0.5-0.6, -0.1, 0.1, 0.5, 0.1},
+    --    wall_bottom = {-0.1, -0.5, -0.1, 0.1, -0.5+0.6, 0.1},
+   --     wall_side = {-0.5, -0.1, -0.1, -0.5+0.3, 0.5, 0.1},
+    --},
+    
+    --node_box = {
+    --    type = "wallmounted",
+    --    wall_top = {-0.0625, 0.5-0.5625, -0.0625, 0.0625, 0.5, 0.0625},
+    --    wall_bottom = {-0.0625, -0.5, -0.0625, 0.0625, -0.5+0.5625, 0.0625},
+    --    wall_side = {-0.5, -0.0625, -0.0625, -0.5+0.28125, 0.5, 0.0625},
+    --},
+})
+
+-- Node invisível que emite luz
+minetest.register_node("nodes:torch_light", {
+    drawtype = "airlike",
+    paramtype = "light",
+    sunlight_propagates = true,
+    walkable = false,
+    pointable = false,
+    buildable_to = true,
+    light_source = 13,
+    groups = {not_in_creative_inventory = 1},
+})
+
+-- Folhas de carvalho
 minetest.register_node("nodes:leaves", {
     description = "Folhas",
     drawtype = "liquid",
@@ -266,12 +599,62 @@ minetest.register_node("nodes:leaves", {
     post_effect_color = {a = 15, r = 15, g = 15, b = 15},
 })
 
+-- Folhas mirtilo
+minetest.register_node("nodes:blueberryleaves", {
+    description = "Folhas de Mirtilo",
+    drawtype = "liquid",
+    waving = 1,
+    tiles = {"folhasmirtilo.png"},
+    groups = {snappy = 3},
+    drop = "items:stick",
+    walkable = false,
+    alpha = 50,
+    paramtype = "light",
+    liquidtype = "source",
+    liquid_alternative_flowing = "nodes:blueberryleaves",
+    liquid_alternative_source = "nodes:blueberryleaves",
+    liquid_viscosity = 3,
+    liquid_renewable = false,
+    liquid_range = 0,
+    post_effect_color = {a = 15, r = 15, g = 15, b = 15},
+})
+
+minetest.register_node("nodes:nut", {
+    description = "Noz",
+    wield_scale = {x = -2, y = -2, z = -2},
+    drawtype = "mesh",
+    mesh = "noz.obj",
+    tiles = {"noz.png"},
+    
+    walkable = false,
+    paramtype = "light",
+    paramtype2 = "facedir",
+    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    --sounds = default.node_sound_wood_defaults(),
+    
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.08, -0.5, -0.08, 0.08, -0.30, 0.08}
+    },
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.08, -0.5, -0.08, 0.08, -0.30, 0.08}
+    },
+    
+    -- Tornar comestível
+    on_use = function(itemstack, user, pointed_thing)
+        restore_hunger(user, 1)  -- Restaura 1 ponto
+        itemstack:take_item()
+        return itemstack
+    end,
+})
+
 -- Folhas com 4 blueberry
 minetest.register_node("nodes:leaves_blueberry4", {
     description = "Folhas com 4 mirtilos",
     drawtype = "allfaces_optional",
     waving = 1,
-    tiles = {"folhasblueberry4.png"},
+    tiles = {"folhasmirtilo4.png"},
     groups = {snappy = 3},
     drop = {
         items = {
@@ -300,7 +683,7 @@ minetest.register_node("nodes:leaves_nut", {
     groups = {snappy = 3},
     drop = {
         items = {
-            {items = {"items:nut"}},
+            {items = {"nodes:nut"}},
             {items = {"items:stick"}},
         }
     },
@@ -325,7 +708,7 @@ minetest.register_node("nodes:leaves_nut2", {
     groups = {snappy = 3},
     drop = {
         items = {
-            {items = {"items:nut 2"}},
+            {items = {"nodes:nut 2"}},
             {items = {"items:stick"}},
         }
     },
@@ -350,7 +733,7 @@ minetest.register_node("nodes:leaves_nut3", {
     groups = {snappy = 3},
     drop = {
         items = {
-            {items = {"items:nut 3"}},
+            {items = {"nodes:nut 3"}},
             {items = {"items:stick"}},
         }
     },
@@ -368,26 +751,92 @@ minetest.register_node("nodes:leaves_nut3", {
 
 -- Sistema alternativo de dano (caso on_fall_damage não funcione)
 -- Verifica folhas caindo e causa dano aos jogadores
+local players_with_torch = {}
+
 minetest.register_globalstep(function(dtime)
     for _, player in ipairs(minetest.get_connected_players()) do
         local pos = player:get_pos()
-        local above_pos = {x = pos.x, y = pos.y + 2, z = pos.z}
         
-        -- Verifica entidades de blocos caindo acima do jogador
+        -- ==== SISTEMA DE DANO DAS FOLHAS ====
+        local above_pos = {x = pos.x, y = pos.y + 2, z = pos.z}
         local objects = minetest.get_objects_inside_radius(above_pos, 1.5)
         for _, obj in pairs(objects) do
             local entity = obj:get_luaentity()
             if entity and entity.name == "__builtin:falling_node" then
                 local node = entity.node
                 if node and node.name and node.name:find("nodes:leaves") then
-                    -- Verifica se está caindo (velocidade negativa em Y)
                     local velocity = obj:get_velocity()
                     if velocity and velocity.y < -2 then
-                        player:set_hp(player:get_hp() - 1)  -- Causa 1 de dano
+                        player:set_hp(player:get_hp() - 1)
                     end
                 end
             end
         end
+        
+        -- ==== SISTEMA DE LUZ DA TOCHA ====
+        local wielded = player:get_wielded_item()
+        local player_name = player:get_player_name()
+        local light_pos_base = {x = pos.x, y = pos.y + 1, z = pos.z}
+        
+        if wielded:get_name() == "nodes:torch2" then
+            -- Cria luz temporária
+            if not players_with_torch[player_name] then
+                players_with_torch[player_name] = {}
+            end
+            
+            -- Remove luz antiga
+            if players_with_torch[player_name].pos then
+                local old_pos = players_with_torch[player_name].pos
+                local node = minetest.get_node(old_pos)
+                if node.name == "nodes:torch_light" then
+                    minetest.remove_node(old_pos)
+                end
+            end
+            
+            -- Coloca nova luz invisível
+            local light_pos = vector.round(light_pos_base)
+            local node = minetest.get_node(light_pos)
+            if node.name == "air" then
+                minetest.set_node(light_pos, {name = "nodes:torch_light"})
+                players_with_torch[player_name].pos = light_pos
+            end
+        else
+            -- Remove luz se não está mais segurando
+            if players_with_torch[player_name] and players_with_torch[player_name].pos then
+                local old_pos = players_with_torch[player_name].pos
+                local node = minetest.get_node(old_pos)
+                if node.name == "nodes:torch_light" then
+                    minetest.remove_node(old_pos)
+                end
+                players_with_torch[player_name] = nil
+            end
+        end
+    end
+end)
+
+-- Limpa luz quando jogador sai
+minetest.register_on_leaveplayer(function(player)
+    local player_name = player:get_player_name()
+    if players_with_torch[player_name] and players_with_torch[player_name].pos then
+        local pos = players_with_torch[player_name].pos
+        local node = minetest.get_node(pos)
+        if node.name == "nodes:torch_light" then
+            minetest.remove_node(pos)
+        end
+        players_with_torch[player_name] = nil
+    end
+end)
+
+-- Limpa luz quando jogador sai
+minetest.register_on_leaveplayer(function(player)
+    local player_name = player:get_player_name()
+    if players_with_torch[player_name] and players_with_torch[player_name].pos then
+        local pos = players_with_torch[player_name].pos
+        local node = minetest.get_node(pos)
+        if node.name == "nodes:torch_light" then
+            minetest.remove_node(pos)
+        end
+        players_with_torch[player_name] = nil
     end
 end)
 
@@ -398,9 +847,10 @@ minetest.register_node("nodes:apple", {
     mesh = "apple.obj",
     tiles = {"AppleTexture.png"},
     
+    walkable = false,
     paramtype = "light",
     paramtype2 = "facedir",
-    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    groups = {snappy = 3, oddly_breakable_by_hand = 1, armor_head = 1},
     
     collision_box = {
         type = "fixed",
@@ -421,10 +871,12 @@ minetest.register_node("nodes:apple", {
 
 minetest.register_node("nodes:blueberry", {
     description = "Mirtilo",
+    --wield_scale = {x = 10, y = 10, z = 10},
     drawtype = "mesh",
     mesh = "blueberry.obj",
     tiles = {"BlueberryTexture.png"},
     
+    walkable = false,
     paramtype = "light",
     paramtype2 = "facedir",
     groups = {snappy = 3, oddly_breakable_by_hand = 1},
@@ -495,6 +947,7 @@ minetest.register_node("nodes:raw_chicken", {
         fixed = {-0.3, -0.5, -0.3, 0.3, 0, 0.3}
     },
     visual_size = {x = 15, y = 15},
+    wield_scale = {x= -2, y= -2, z= -2},
     -- Tornar comestível
     on_use = function(itemstack, user, pointed_thing)
         restore_hunger(user, 1)  -- Restaura 1 ponto
@@ -509,6 +962,7 @@ minetest.register_node("nodes:coconut", {
     mesh = "coconut.obj",
     tiles = {"CocoTexture.png"},
     
+    walkable = false,
     paramtype = "light",
     paramtype2 = "facedir",
     groups = {snappy = 3, oddly_breakable_by_hand = 1},
@@ -560,12 +1014,13 @@ minetest.register_node("nodes:palm_leaf", {
     tiles = {"PalmLeafTexture.png"},
     
     paramtype = "light",
+    walkable = false,
     sunlight_propagates = true,
     shaded = false,  -- Desabilita sombreamento por face
     backface_culling = false,  -- Renderiza ambos os lados das faces
     use_texture_alpha = "blend",
     paramtype2 = "facedir",
-    groups = {snappy = 3, oddly_breakable_by_hand = 1},
+    groups = {snappy = 3, oddly_breakable_by_hand = 1, armor_head = 1},
     --sounds = default.node_sound_wood_defaults(),
     
     collision_box = {
@@ -732,7 +1187,7 @@ minetest.register_node("nodes:water2_flowing", {
     liquid_alternative_flowing = "nodes:lava_flowing",
     liquid_alternative_source = "nodes:lava",
     liquid_viscosity = 1,
-    post_effect_color = {a=64, r=0, g=0, b=255},
+    post_effect_color = {a=64, r=255, g=0, b=0},
     groups = {lava=1, liquid=1},
 })
 
@@ -761,21 +1216,176 @@ minetest.register_node("nodes:lava_flowing", {
     liquid_alternative_flowing = "nodes:lava_flowing",
     liquid_alternative_source = "nodes:lava",
     liquid_viscosity = 1,
-    post_effect_color = {a=64, r=0, g=0, b=255},
+    post_effect_color = {a=64, r=255, g=0, b=0},
     groups = {lava=1, liquid=1, not_in_creative_inventory=1},
 
 })
+
 
 
 ---------
 -- Baú geral
 --------
 
+-- Função para atualizar itens visuais no baú
+function oak_chest_update_items(pos)
+    local node = minetest.get_node(pos)
+    if node.name ~= "nodes:oak_chest_open" then
+        return
+    end
+    
+    local meta = minetest.get_meta(pos)
+    local inv = meta:get_inventory()
+    
+    -- Remover entidades de itens antigas
+    local objects = minetest.get_objects_inside_radius(pos, 1)
+    for _, obj in ipairs(objects) do
+        if obj:get_luaentity() and obj:get_luaentity().name == "nodes:chest_item" then
+            obj:remove()
+        end
+    end
+    
+    -- Procurar a entidade do baú aberto para anexar os itens
+    local chest_entity = nil
+    for _, obj in ipairs(objects) do
+        local luaent = obj:get_luaentity()
+        if luaent and luaent.name == "nodes:oak_chest_entity" then
+            chest_entity = obj
+            break
+        end
+    end
+    
+    -- Se não houver entidade do baú, criar uma invisível para servir de base
+    if not chest_entity then
+        chest_entity = minetest.add_entity(pos, "nodes:oak_chest_entity")
+        if chest_entity and chest_entity:get_luaentity() then
+            local luaent = chest_entity:get_luaentity()
+            luaent.node_pos = pos
+            luaent.is_invisible = true
+            
+            -- Aplicar rotação
+            local yaw = minetest.facedir_to_dir(node.param2)
+            chest_entity:set_yaw(minetest.dir_to_yaw(yaw))
+        end
+    end
+    
+    if not chest_entity then
+        return
+    end
+    
+    -- Criar novas entidades para cada item (máximo 16 bones)
+    for i = 1, math.min(16, inv:get_size("main")) do
+        local stack = inv:get_stack("main", i)
+        if not stack:is_empty() then
+            local entity = minetest.add_entity(pos, "nodes:chest_item")
+            if entity and entity:get_luaentity() then
+                local luaent = entity:get_luaentity()
+                luaent.chest_pos = pos
+                luaent.slot_index = i
+                luaent:update_item(stack:get_name())
+                
+                -- Anexar ao bone correspondente do baú
+                entity:set_attach(chest_entity, "bone"..i, {x=0, y=0, z=0}, {x=0, y=0, z=0})
+            end
+        end
+    end
+end
+
+-- Entidade para representar itens no baú
+minetest.register_entity("nodes:chest_item", {
+    initial_properties = {
+        visual = "wielditem",
+        wield_item = "air",
+        visual_size = {x=0.1, y=0.1},  -- Tamanho reduzido (era 0.25)
+        physical = false,
+        collide_with_objects = false,
+        pointable = false,
+        static_save = false,
+    },
+    
+    chest_pos = nil,
+    slot_index = 0,
+    
+    on_activate = function(self, staticdata)
+        self.object:set_armor_groups({immortal=1})
+    end,
+    
+    update_item = function(self, item_name)
+        self.object:set_properties({
+            wield_item = item_name
+        })
+    end,
+    
+    on_step = function(self, dtime)
+        -- Verificar se o baú ainda existe
+        if not self.chest_pos then
+            self.object:remove()
+            return
+        end
+        
+        local node = minetest.get_node(self.chest_pos)
+        if node.name ~= "nodes:oak_chest_open" then
+            self.object:remove()
+        end
+    end,
+})
+
+minetest.register_node("nodes:oak_chest_open", {
+    drawtype = "mesh",
+    mesh = "chestopen.obj",  -- modelo sem tampa
+    tiles = {"ChestTexture.png"}, -- mesma textura
+    walkable = true,
+    pointable = true,
+    paramtype = "light",
+    paramtype2 = "facedir",
+
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.5,-0.5,-0.5, 0.5,0.5,0.5}
+    },
+    collision_box = {
+        type = "fixed",
+        fixed = {-0.5,-0.5,-0.5, 0.5,0.5,0.5}
+    },
+
+    groups = {not_in_creative_inventory = 1},
+    
+    -- Quando clicar no baú aberto, mostrar inventário
+    on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+        local meta = minetest.get_meta(pos)
+        local player_name = clicker:get_player_name()
+        
+        -- Marcar que o jogador está usando o baú
+        meta:set_string("current_user", player_name)
+        
+        minetest.show_formspec(player_name, "nodes:oak_chest_"..minetest.pos_to_string(pos),
+            meta:get_string("formspec"))
+        
+        return itemstack
+    end,
+    
+    -- Atualizar itens visuais quando o node é construído
+    on_construct = function(pos)
+        minetest.after(0.1, function()
+            oak_chest_update_items(pos)
+        end)
+    end,
+    
+    -- Atualizar itens visuais após colocar
+    after_place_node = function(pos, placer, itemstack, pointed_thing)
+        minetest.after(0.1, function()
+            oak_chest_update_items(pos)
+        end)
+    end,
+})
+
 minetest.register_node("nodes:oak_chest", {
     description = "Baú de Carvalho",
     drawtype = "mesh",
     mesh = "chest.glb",
     tiles = {"ChestTexture.png"},
+    walkable = true,
+    pointable = true,
     
     paramtype = "light",
     paramtype2 = "facedir",
@@ -821,12 +1431,16 @@ minetest.register_node("nodes:oak_chest", {
         
 	-- Adiciona páginas em branco
 	inv:set_stack("main", 4, ItemStack("items:page 5"))  -- 5 páginas em branco
+	
+	inv:set_stack("main", 5, ItemStack("items:feather"))  -- pena de escrever
+	inv:set_stack("main", 6, ItemStack("items:inkbottle"))  -- frasco com tinta
+	inv:set_stack("main", 7, ItemStack("nodes:torch2"))  -- tocha acesa
         
-        inv:set_stack("main", 5, ItemStack("nodes:apple 2"))  -- 2 maças
-        inv:set_stack("main", 6, ItemStack("nodes:blueberry 2"))  -- 2 mitilos
-        inv:set_stack("main", 7, ItemStack("nodes:coconut 2"))  -- 2 cocos
-        inv:set_stack("main", 8, ItemStack("nodes:palm_trunk 1"))
-        inv:set_stack("main", 9, ItemStack("nodes:palm_leaf 1"))
+        inv:set_stack("main", 8, ItemStack("nodes:apple 2"))  -- 2 maças
+        inv:set_stack("main", 9, ItemStack("nodes:blueberry 2"))  -- 2 mitilos
+        inv:set_stack("main", 10, ItemStack("nodes:coconut 2"))  -- 2 cocos
+        inv:set_stack("main", 11, ItemStack("nodes:palm_trunk 1"))
+        inv:set_stack("main", 12, ItemStack("nodes:palm_leaf 1"))
         
         -- Definir formspec do inventário
         meta:set_string("formspec",
@@ -857,7 +1471,11 @@ minetest.register_node("nodes:oak_chest", {
         --    max_hear_distance = 10,
         --}, true)
         
-        -- Animar abertura do baú
+        -- Substitui o node pelo baú aberto
+        local current_node = minetest.get_node(pos)
+        minetest.swap_node(pos, {name = "nodes:oak_chest_open", param2 = current_node.param2})
+        
+        -- Retira a entidade baú depois da animação
         local objects = minetest.get_objects_inside_radius(pos, 0.5)
         for _, obj in ipairs(objects) do
             if obj:get_luaentity() and obj:get_luaentity().name == "nodes:oak_chest_entity" then
@@ -867,14 +1485,26 @@ minetest.register_node("nodes:oak_chest", {
         
         -- Criar entidade para animação
         local entity = minetest.add_entity(pos, "nodes:oak_chest_entity")
-        if entity then
-            entity:get_luaentity().node_pos = pos
-            entity:set_animation({x=0, y=0.25}, 1, 0, true) -- 0 a 0.25s a 30fps = frames 0-7.5
+        if entity and entity:get_luaentity() then
+            local luaentity = entity:get_luaentity()
+            luaentity.node_pos = pos
+            luaentity.original_param2 = current_node.param2
+            -- Aplicar a rotação do baú à entidade
+            local yaw = minetest.facedir_to_dir(current_node.param2)
+            entity:set_yaw(minetest.dir_to_yaw(yaw))
+            entity:set_animation({x=0, y=0.25}, 1, 0, false) -- 0 a 0.25s a 30fps = frames 0-7.5
         end
         
         -- Abrir inventário
         local meta = minetest.get_meta(pos)
         local player_name = clicker:get_player_name()
+        
+        -- Marcar que o jogador está usando o baú
+        meta:set_string("current_user", player_name)
+        
+        -- Atualizar itens visuais
+        oak_chest_update_items(pos)
+        
         minetest.show_formspec(player_name, "nodes:oak_chest_"..minetest.pos_to_string(pos),
             meta:get_string("formspec"))
         
@@ -927,9 +1557,54 @@ minetest.register_entity("nodes:oak_chest_entity", {
         collide_with_objects = false,
         pointable = false,
         static_save = false,
+        paramtype = "light",
+        paramtype2 = "facedir",
     },
     
     node_pos = nil,
+    original_param2 = 0,
+    timer = 0,
+    animation_finished = false,
+    is_invisible = false,
+    
+    on_activate = function(self, staticdata)
+        self.object:set_armor_groups({immortal=1})
+    end,
+    
+    on_step = function(self, dtime)
+        -- Se for invisível (só para anexar itens), não fazer nada
+        if self.is_invisible then
+            return
+        end
+        
+        self.timer = self.timer + dtime
+        
+        -- Após a animação, congelar no último frame
+        if self.timer > 0.3 and not self.animation_finished then
+            self.animation_finished = true
+            -- Congelar no último frame da animação
+            self.object:set_animation({x=0.25, y=0.25}, 0, 0, false)
+        end
+    end,
+})
+
+-- Entidade para animação de fechamento
+minetest.register_entity("nodes:oak_chest_close_entity", {
+    initial_properties = {
+        visual = "mesh",
+        mesh = "chest.glb",
+        textures = {"ChestTexture.png"},
+        visual_size = {x=1, y=1, z=1},
+        physical = false,
+        collide_with_objects = false,
+        pointable = false,
+        static_save = false,
+        paramtype = "light",
+        paramtype2 = "facedir",
+    },
+    
+    node_pos = nil,
+    original_param2 = 0,
     timer = 0,
     
     on_activate = function(self, staticdata)
@@ -939,20 +1614,142 @@ minetest.register_entity("nodes:oak_chest_entity", {
     on_step = function(self, dtime)
         self.timer = self.timer + dtime
         
-        -- Remover após animação (0.25s + margem)
-        if self.timer > 0.3 then --0.3
+        -- Remover entidade e fechar baú após a animação
+        if self.timer > 0.3 then
+            -- Remover todos os itens anexados
+            if self.node_pos then
+                local objects = minetest.get_objects_inside_radius(self.node_pos, 1)
+                for _, obj in ipairs(objects) do
+                    local luaent = obj:get_luaentity()
+                    if luaent and luaent.name == "nodes:chest_item" then
+                        obj:remove()
+                    end
+                end
+            end
+            
             self.object:remove()
             
-            -- Tornar o node visível novamente
+            -- Trocar para node fechado
             if self.node_pos then
                 local node = minetest.get_node(self.node_pos)
-                if node.name == "nodes:oak_chest" then
-                    -- Node já está visível, não precisa fazer nada
+                if node.name == "nodes:oak_chest_open" then
+                    minetest.swap_node(self.node_pos, {name = "nodes:oak_chest", param2 = self.original_param2})
                 end
             end
         end
     end,
 })
+
+-- Detectar quando o jogador fecha o formspec
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    -- Verificar se é um formspec de baú
+    if formname:sub(1, 16) == "nodes:oak_chest_" then
+        local pos_string = formname:sub(17)
+        local pos = minetest.string_to_pos(pos_string)
+        
+        if pos then
+            local node = minetest.get_node(pos)
+            
+            -- Se o baú estiver aberto, fechá-lo
+            if node.name == "nodes:oak_chest_open" then
+                local meta = minetest.get_meta(pos)
+                local current_user = meta:get_string("current_user")
+                local player_name = player:get_player_name()
+                
+                -- Verificar se é o jogador que estava usando
+                if current_user == player_name then
+                    -- Limpar usuário atual
+                    meta:set_string("current_user", "")
+                    
+                    -- Remover apenas a entidade da animação de abertura (mas manter os itens)
+                    local objects = minetest.get_objects_inside_radius(pos, 0.5)
+                    local chest_entity = nil
+                    
+                    for _, obj in ipairs(objects) do
+                        local luaent = obj:get_luaentity()
+                        if luaent and luaent.name == "nodes:oak_chest_entity" then
+                            chest_entity = obj
+                            break
+                        end
+                    end
+                    
+                    -- Criar entidade para animação de fechamento
+                    local close_entity = minetest.add_entity(pos, "nodes:oak_chest_close_entity")
+                    if close_entity and close_entity:get_luaentity() then
+                        local luaentity = close_entity:get_luaentity()
+                        luaentity.node_pos = pos
+                        luaentity.original_param2 = node.param2
+                        
+                        -- Transferir os itens anexados para a entidade de fechamento
+                        if chest_entity then
+                            for _, obj in ipairs(objects) do
+                                local luaent = obj:get_luaentity()
+                                if luaent and luaent.name == "nodes:chest_item" then
+                                    -- Re-anexar ao novo baú (fechamento)
+                                    local slot = luaent.slot_index
+                                    obj:set_attach(close_entity, "bone"..slot, {x=0, y=0, z=0}, {x=0, y=0, z=0})
+                                end
+                            end
+                            
+                            -- Remover a entidade antiga do baú
+                            chest_entity:remove()
+                        end
+                        
+                        -- Aplicar a rotação do baú à entidade
+                        local yaw = minetest.facedir_to_dir(node.param2)
+                        close_entity:set_yaw(minetest.dir_to_yaw(yaw))
+                        -- Animação de fechamento (do frame aberto para fechado)
+                        close_entity:set_animation({x=0.25, y=0}, 30, 0, false)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+
+
+-- Detectar mudanças no inventário do baú
+minetest.register_on_player_inventory_action(function(player, action, inventory, inventory_info)
+    if action ~= "move" and action ~= "put" and action ~= "take" then
+        return
+    end
+
+    if inventory_info.to_list ~= "main" and inventory_info.from_list ~= "main" then
+        return
+    end
+
+    local player_name = player:get_player_name()
+    local player_pos = player:get_pos()
+    if not player_pos then return end
+
+    local objects = minetest.get_objects_inside_radius(player_pos, 10)
+
+    for _, obj in ipairs(objects) do
+        if obj:is_player() then
+            goto continue
+        end
+
+        local pos = obj:get_pos()
+        if not pos then
+            goto continue
+        end
+
+        local node = minetest.get_node_or_nil(pos)
+        if not node then
+            goto continue
+        end
+
+        if node.name == "nodes:oak_chest_open" then
+            local meta = minetest.get_meta(pos)
+            if meta:get_string("current_user") == player_name then
+                oak_chest_update_items(pos)
+            end
+        end
+
+        ::continue::
+    end
+end)
 
 -- Som de fechamento ao sair do formspec (opcional)
 --minetest.register_on_player_receive_fields(function(player, formname, fields)
@@ -1257,4 +2054,76 @@ minetest.register_node("nodes:pebble", {
     after_place_node = function(pos)
         minetest.check_for_falling(pos)
     end,
+})
+
+
+------------------------------------------------------------
+-- EXEMPLO: REGISTRAR ITENS DE VESTUÁRIO (tá como tool por enquanto)
+------------------------------------------------------------
+
+-- Cinto
+minetest.register_node("nodes:belt", {
+    description = "Cinto Básico",
+    inventory_image = "belt.png",
+    drawtype = "mesh",
+    mesh = "belt.obj",
+    tiles = {"belt_overlay.png"},
+    groups = {oddly_breakable_by_hand = 1, armor_waist = 1},
+    
+    node_box = {
+        type = "fixed",
+        fixed = {
+            {-0.28, -0.5, -0.18, 0.28, -0.32, 0.18},
+        },
+    },
+
+    selection_box = {
+        type = "fixed",
+        fixed = {-0.28, -0.5, -0.18, 0.28, -0.32, 0.18},
+    },
+   
+})
+
+-- Mochila
+minetest.register_node("nodes:backchest", {
+    description = "Mochila Baú",
+    drawtype = "mesh",
+    mesh = "backchest.obj",
+    tiles = {"ChestTexture.png"},
+    --inventory_image = "bag_basic.png",
+    groups = {snappy = 3, oddly_breakable_by_hand = 1, armor_back = 1},
+    visual = "wielditem",
+    visual_size = {x=0.5, y=0.5, z=0.5},
+    paramtype = "light",
+    paramtype2 = "facedir",
+    
+})
+
+-- Exemplo de capacete
+minetest.register_tool("nodes:helmet", {
+    description = "Capacete Básico",
+    inventory_image = "helmet_basic.png",
+    groups = {armor_head = 1},
+})
+
+
+-- Exemplo de armadura de tronco
+minetest.register_tool("nodes:chestplate", {
+    description = "Peitoral Básico",
+    inventory_image = "chestplate_basic.png",
+    groups = {armor_torso = 1},
+})
+
+-- Exemplo de calças
+minetest.register_tool("nodes:leggings", {
+    description = "Calças Básicas",
+    inventory_image = "leggings_basic.png",
+    groups = {armor_legs = 1},
+})
+
+-- Exemplo de botas
+minetest.register_tool("nodes:boots", {
+    description = "Botas Básicas",
+    inventory_image = "boots_basic.png",
+    groups = {armor_feet = 1},
 })
