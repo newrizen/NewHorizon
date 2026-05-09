@@ -132,37 +132,7 @@ local statue_pos = nil
 local sentinel_pos = nil
 local lowest_island_pos = nil
 -- NOISES (mantidos para compatibilidade com funções antigas)
-local P_nomes = {
-    perlin_continent,
-    perlin_biome,
-    perlin_mountain,
-    perlin_hills,
-    perlin_plains,
-    perlin_roughness,
-    perlin_caves,
-    perlin_caves_lava,
-    perlin_caves_water,
-    perlin_cave_size,
-    perlin_grassleaves,
-    perlin_trees,
-    perlin_bushes,
-    -- perlin_palms,
-    perlin_saprolite,
-    -- NOISES PARA MINÉRIOS (adicionar após os noises existentes)
-    perlin_ore_master,
-    perlin_coal,
-    perlin_copper,
-    perlin_tin,
-    perlin_iron,
-    perlin_nickel,
-    perlin_manganes,
-    perlin_chromium
-}
 local P = {}
-for _, nome in ipairs(P_nomes) do
-    P[nome] = nil -- (Ou um valor inicial padrão)
-end
-P_nomes = nil
 -----------------------------
 -- PERLIN MAPS (OTIMIZAÇÃO)
 -----------------------------
