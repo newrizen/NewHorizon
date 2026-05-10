@@ -2136,7 +2136,7 @@ local function try_spawn_ship(area, data, minp, maxp)
                         spawn_ship(area, data, base_pos)
                         place_ship_chest(area, data, { x = base_pos.x, y = base_pos.y + 1, z = base_pos.z })
                         ship_generated = true
-                        ship_pos = {x = base_pos.x + 2, y = base_pos.y + 4, z = base_pos.z + 4}
+                        ship_pos = { x = base_pos.x + 2, y = base_pos.y + 4, z = base_pos.z + 4 }
                         return true
                     end
                 end
