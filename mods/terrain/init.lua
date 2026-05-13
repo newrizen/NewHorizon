@@ -105,12 +105,12 @@ local C           = {
     chromium           = gcid "nh_nodes:chromium",
 }
 -- Tabelas de tipo, definidas UMA VEZ no escopo do módulo (fora de qualquer função)
-local GRASS_SOLID = {} -- preenchido após os content_ids serem obtidos
-local GRASS_PASS  = {}
-local DIRT_SOLID  = {}
-local DIRT_EDGE   = {}
-local SAND_SOLID  = {}
-local SAND_EDGE   = {}
+local GRASS_SOLID  -- preenchido após os content_ids serem obtidos
+local GRASS_PASS  
+local DIRT_SOLID  
+local DIRT_EDGE   
+local SAND_SOLID  
+local SAND_EDGE   
 local function init_slope_tables()
     GRASS_SOLID[C.topgrass]          = true
     GRASS_SOLID[C.top_grass_ramp]    = true
@@ -222,7 +222,7 @@ local function slope_get_below(x, z)
     if slope_area:contains(x, slope_y - 1, z) then return slope_data[slope_area:index(x, slope_y - 1, z)] end
     return C.ignore
 end
-local entity_positions = {}
+local entity_positions 
 local tent_generated = false
 local TENT_SEARCH_RADIUS = 256
 local ship_generated = false
@@ -236,7 +236,7 @@ local lowest_island_pos = nil
 local ship_pos = nil
 -- NOISES (mantidos para compatibilidade com funções antigas)
 local function populate_Pall(names)
-    local father = {}
+    local father 
     for _, name in ipairs(names) do father[name] = nil end
     return father
 end
@@ -550,7 +550,7 @@ local function spawn_palm_tree(area, data, pos, wx, wz)
         {x = -1, z = 0,  rotation = 3}, -- Oeste
    }
     -- Registro opcional de folhas (se você realmente usa isso depois)
-    local leaf_nodes   = {}
+    local leaf_nodes   
     --  FOLHAS EM CRUZ - CAMADA INFERIOR
     for _, dir in ipairs(directions) do
         for i = 1, 3 do
@@ -1008,8 +1008,8 @@ end
 local MAX_TERRAIN_Y = 80
 local function calculate_height_batch(minp, maxp, SEA_LEVEL, CENTER_X, CENTER_Z, MAX_RADIUS, continent_2d, biome_2d,
                                       mountain_2d, hills_2d, plains_2d, rough_2d)
-    local heights = {}
-    local biome_factors = {}
+    local heights 
+    local biome_factors 
     local sidelen = maxp.x - minp.x + 1
     local index = 1
     for z = minp.z, maxp.z do
@@ -1248,7 +1248,7 @@ local function spawn_ship(area, data, base_pos)
     -- parede do fundo (dz = depth-1) fica ABERTA — entrada da cabine
 end
 local function place_tent_chest(area, data, base_pos)
-    local candidates = {}
+    local candidates 
     for dx = 1, 2 do
         for dz = 1, 3 do table.insert(candidates, {dx = dx, dz = dz}) end
     end
@@ -1353,7 +1353,7 @@ local function spawn_house(area, data, base_pos)
     -- parede do fundo (dz = depth-1) fica ABERTA — entrada da cabine
 end
 local function place_ship_chest(area, data, base_pos)
-    local candidates = {}
+    local candidates 
     for dx = 1, 2 do
         for dz = 1, 3 do table.insert(candidates, {dx = dx, dz = dz}) end
     end
@@ -1801,7 +1801,7 @@ local FLOATING_ISLANDS = nil
 -- INICIALIZA ILHAS (AGORA COM 2–3 CONES)
 local function init_floating_islands()
     if FLOATING_ISLANDS then return end
-    FLOATING_ISLANDS = {}
+    FLOATING_ISLANDS 
     local rng = PseudoRandom(314159)
     local count = 12
     for i = 1, count do
@@ -1819,7 +1819,7 @@ local function init_floating_islands()
         local cone_height = rng:next(40, 100)
         -- 🔻 2 a 3 cones por ilha
         local cone_count = rng:next(3, 4)
-        local cones = {}
+        local cones 
         local spread = 0.4 -- afastamento dos cones
         for c = 1, cone_count do
             local offset_x = rng:next(-top_radius * spread, top_radius * spread)
@@ -1975,11 +1975,11 @@ end
 -- FUNÇÃO DE GERAÇÃO DE DECORAÇÕES (ÁRVORES, PEBBLES, ETC)
 local function generate_decorations(minp, maxp, heights, biome_factors, noise_maps)
     local SEA_LEVEL = 0
-    local grassleaves_positions = {}
-    local tree_positions = {}
-    local pebble_positions = {}
-    local pebble_positions2 = {}
-    local palm_positions = {}
+    local grassleaves_positions 
+    local tree_positions 
+    local pebble_positions 
+    local pebble_positions2 
+    local palm_positions 
     local index_2d = 1
     for z = minp.z, maxp.z do
         for x = minp.x, maxp.x do
@@ -2057,7 +2057,7 @@ local function generate_decorations(minp, maxp, heights, biome_factors, noise_ma
 end
 -- FUNÇÃO DE APLICAÇÃO DAS DECORAÇÕES
 local function apply_decorations(area, data, param2_data, decorations)
-    local palm_leaf_rotations = {}
+    local palm_leaf_rotations 
 
     -- Gera árvores
     for _, spawn_data in ipairs(decorations.trees) do
@@ -2433,7 +2433,7 @@ core.register_lbm({
             west  = is_solid_same({x = x - 1, y = y, z = z    }),
         }
 
-        local drops = {}
+        local drops 
         if below.north then drops[#drops+1] = "south" end
         if below.south then drops[#drops+1] = "north" end
         if below.east  then drops[#drops+1] = "west"  end
@@ -2553,7 +2553,7 @@ local function make_slope_lbm(cfg)
             west  = is_solid({x = x - 1, y = y, z = z    }),
         }
 
-        local drops = {}
+        local drops 
         if b.north then drops[#drops+1] = "south" end
         if b.south then drops[#drops+1] = "north" end
         if b.east  then drops[#drops+1] = "west"  end
@@ -2735,7 +2735,7 @@ core.register_abm({
             west  = is_solid_same({x = x - 1, y = y, z = z}),
        }
 
-        local drops = {}
+        local drops 
         if below.north then table.insert(drops, "south") end
         if below.south then table.insert(drops, "north") end
         if below.east then table.insert(drops, "west") end
