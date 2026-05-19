@@ -3640,14 +3640,11 @@ core.register_node("nh_nodes:kelp", {
             local node_ptu = minetest.get_node(pointed_thing.under)
             local def_ptu = minetest.registered_nodes[node_ptu.name]
             if def_ptu and def_ptu.on_rightclick then
-                return def_ptu.on_rightclick(pointed_thing.under, node_ptu, placer,
-                    itemstack, pointed_thing)
+                return def_ptu.on_rightclick(pointed_thing.under, node_ptu, placer, itemstack, pointed_thing)
             end
         end
         local pos = pointed_thing.under
-        if minetest.get_node(pos).name ~= "nh_nodes:wet_sand" then
-            return itemstack
-        end
+        if minetest.get_node(pos).name ~= "nh_nodes:wet_sand" then return itemstack end
         local height = math.random(3, 6)
         local pos_top = { x = pos.x, y = pos.y + height, z = pos.z }
         local node_top = minetest.get_node(pos_top)
@@ -3657,13 +3654,8 @@ core.register_node("nh_nodes:kelp", {
             minetest.get_item_group(node_top.name, "water") > 0 then
             if not minetest.is_protected(pos, player_name) and
                 not minetest.is_protected(pos_top, player_name) then
-                minetest.set_node(pos, {
-                    name = "nh_nodes:kelp",
-                    param2 = height * 16
-                })
-                if not minetest.is_creative_enabled(player_name) then
-                    itemstack:take_item()
-                end
+                minetest.set_node(pos, { name = "nh_nodes:kelp", param2 = height * 16 })
+                if not minetest.is_creative_enabled(player_name) then itemstack:take_item() end
             else
                 minetest.chat_send_player(player_name, S "Node is protected")
                 minetest.record_protection_violation(pos, player_name)
@@ -3684,12 +3676,7 @@ core.register_node("nh_nodes:pineleaves", {
     tiles = { "pineleaves.png" },
     waving = 1,
     groups = { snappy = 3, tree_leaves = 1 },
-    drop = {
-        items = {
-            { items = { "nh_nodes:limb" } },
-            { items = { "nh_nodes:oakresin" } },
-        }
-    },
+    drop = { items = { { items = { "nh_nodes:limb" } }, { items = { "nh_nodes:oakresin" } }, } },
     walkable = false,
     use_texture_alpha = "blend",
     paramtype = "light",
@@ -3700,7 +3687,6 @@ core.register_node("nh_nodes:pineleaves", {
     liquid_renewable = false,
     liquid_range = 0,
     post_effect_color = { a = 15, r = 15, g = 15, b = 15 },
-
 })
 
 -- Folhas de macieira
@@ -3711,11 +3697,7 @@ core.register_node("nh_nodes:appleleaves", {
     tiles = { "appleleaves.png" },
     waving = 1,
     groups = { snappy = 3, tree_leaves = 1 },
-    drop = {
-        items = {
-            { items = { "nh_nodes:stick" } },
-        }
-    },
+    drop = { items = { { items = { "nh_nodes:stick" } }, } },
     walkable = false,
     use_texture_alpha = "blend",
     paramtype = "light",
@@ -3727,7 +3709,6 @@ core.register_node("nh_nodes:appleleaves", {
     liquid_range = 0,
     post_effect_color = { a = 15, r = 15, g = 15, b = 15 },
 })
-
 -- Folhas com 1 maça
 core.register_node("nh_nodes:leaves_apple", {
     description = S "Leaves with Apple",
@@ -3736,12 +3717,7 @@ core.register_node("nh_nodes:leaves_apple", {
     tiles = { "appleleaves.png" },
     waving = 2,
     groups = { snappy = 3, tree_leaves = 1 },
-    drop = {
-        items = {
-            { items = { "nh_nodes:apple" } },
-            { items = { "nh_nodes:stick" } },
-        }
-    },
+    drop = { items = { { items = { "nh_nodes:apple" } }, { items = { "nh_nodes:stick" } }, } },
     walkable = false,
     use_texture_alpha = "clip",
     paramtype = "light",
@@ -3752,23 +3728,18 @@ core.register_node("nh_nodes:leaves_apple", {
     liquid_renewable = false,
     liquid_range = 0,
     post_effect_color = { a = 15, r = 15, g = 15, b = 15 },
-
     -- Callback ao clicar com botão direito (pegar maçã)
     on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
         if clicker and clicker:is_player() then
             -- Adiciona a maçã ao inventário do jogador
             local inv = clicker:get_inventory()
-            if inv then
-                inv:add_item("main", "nh_nodes:apple")
-            end
-
+            if inv then inv:add_item("main", "nh_nodes:apple") end
             -- Transforma o node em leaves_apple2
             core.set_node(pos, { name = "nh_nodes:appleleaves" })
         end
         return itemstack
     end,
 })
-
 -- Folhas com 2 maças
 core.register_node("nh_nodes:leaves_apple2", {
     description = S "Leaves with 2 Apples",
@@ -3777,12 +3748,7 @@ core.register_node("nh_nodes:leaves_apple2", {
     tiles = { "appleleaves.png" },
     waving = 2,
     groups = { snappy = 3, tree_leaves = 1 },
-    drop = {
-        items = {
-            { items = { "nh_nodes:apple 2" } },
-            { items = { "nh_nodes:stick" } },
-        }
-    },
+    drop = { items = { { items = { "nh_nodes:apple 2" } }, { items = { "nh_nodes:stick" } }, } },
     walkable = false,
     use_texture_alpha = "clip",
     paramtype = "light",
@@ -3793,16 +3759,12 @@ core.register_node("nh_nodes:leaves_apple2", {
     liquid_renewable = false,
     liquid_range = 0,
     post_effect_color = { a = 15, r = 15, g = 15, b = 15 },
-
     -- Callback ao clicar com botão direito (pegar maçã)
     on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
         if clicker and clicker:is_player() then
             -- Adiciona a maçã ao inventário do jogador
             local inv = clicker:get_inventory()
-            if inv then
-                inv:add_item("main", "nh_nodes:apple")
-            end
-
+            if inv then inv:add_item("main", "nh_nodes:apple") end
             -- Transforma o node em leaves_apple2
             core.set_node(pos, { name = "nh_nodes:leaves_apple" })
         end
@@ -3818,12 +3780,7 @@ core.register_node("nh_nodes:leaves_apple3", {
     tiles = { "appleleaves.png" },
     waving = 2,
     groups = { snappy = 3, tree_leaves = 1 },
-    drop = {
-        items = {
-            { items = { "nh_nodes:apple 3" } },
-            { items = { "nh_nodes:stick" } },
-        }
-    },
+    drop = { items = { { items = { "nh_nodes:apple 3" } }, { items = { "nh_nodes:stick" } }, } },
     walkable = false,
     use_texture_alpha = "clip",
     paramtype = "light",
@@ -3834,38 +3791,30 @@ core.register_node("nh_nodes:leaves_apple3", {
     liquid_renewable = false,
     liquid_range = 0,
     post_effect_color = { a = 15, r = 15, g = 15, b = 15 },
-
     -- Configuração mão direita
     wielded_bone_position = {
         pos = { x = 0.5, y = 0.5, z = 1.7 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
     -- Configuração mão esquerda
     offhand_bone_position = {
         pos = { x = 1, y = 0, z = 0 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
-
     -- Callback ao clicar com botão direito (pegar maçã)
     on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
         if clicker and clicker:is_player() then
             -- Adiciona a maçã ao inventário do jogador
             local inv = clicker:get_inventory()
-            if inv then
-                inv:add_item("main", "nh_nodes:apple")
-            end
-
+            if inv then inv:add_item("main", "nh_nodes:apple") end
             -- Transforma o node em leaves_apple2
             core.set_node(pos, { name = "nh_nodes:leaves_apple2" })
         end
         return itemstack
     end,
 })
-
 -- Folhas mirtilo
 core.register_node("nh_nodes:blueberryleaves", {
     description = S "Blueberry Leaves",
@@ -3885,7 +3834,6 @@ core.register_node("nh_nodes:blueberryleaves", {
     liquid_range = 0,
     post_effect_color = { a = 15, r = 15, g = 15, b = 15 },
 })
-
 -- Folhas com 4 blueberry
 core.register_node("nh_nodes:leaves_blueberry4", {
     description = S "Leaves with 4 Blueberries",
@@ -3893,12 +3841,7 @@ core.register_node("nh_nodes:leaves_blueberry4", {
     waving = 1,
     tiles = { "folhasmirtilo4.png" },
     groups = { snappy = 3 },
-    drop = {
-        items = {
-            { items = { "nh_nodes:blueberry 4" } },
-            { items = { "nh_nodes:stick" } },
-        }
-    },
+    drop = { items = { { items = { "nh_nodes:blueberry 4" } }, { items = { "nh_nodes:stick" } }, } },
     walkable = false,
     use_texture_alpha = 30,
     paramtype = "light",
@@ -3909,23 +3852,18 @@ core.register_node("nh_nodes:leaves_blueberry4", {
     liquid_renewable = false,
     liquid_range = 0,
     post_effect_color = { a = 15, r = 15, g = 15, b = 15 },
-
     -- Callback ao clicar com botão direito (pegar maçã)
     on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
         if clicker and clicker:is_player() then
             -- Adiciona a maçã ao inventário do jogador
             local inv = clicker:get_inventory()
-            if inv then
-                inv:add_item("main", "nh_nodes:blueberry 4")
-            end
-
+            if inv then inv:add_item("main", "nh_nodes:blueberry 4") end
             -- Transforma o node em leaves_apple2
             core.set_node(pos, { name = "nh_nodes:blueberryleaves" })
         end
         return itemstack
     end,
 })
-
 core.register_node("nh_nodes:giantcrabstatue", {
     description = S "Giant Crab Statue" .. "\n" .. S "[Unknown]",
     drawtype = "mesh",
@@ -3934,32 +3872,19 @@ core.register_node("nh_nodes:giantcrabstatue", {
     sunlight_propagates = true,
     paramtype = "light",
     paramtype2 = "facedir",
-
     groups = { falling_node = 1 },
-
     light_source = 7,
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -1.75, -0.5, -1.5, 1.75, 3.75, 1.5 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -1.75, -0.5, -2.5, 1.75, 3.75, 1.5 }
-    },
-
+    collision_box = { type = "fixed", fixed = { -1.75, -0.5, -1.5, 1.75, 3.75, 1.5 } },
+    selection_box = { type = "fixed", fixed = { -1.75, -0.5, -2.5, 1.75, 3.75, 1.5 } },
     on_punch = function(pos, node, puncher, pointed_thing)
         if not puncher or not puncher:is_player() then return end
-
         local item = puncher:get_wielded_item()
         local item_name = item:get_name()
-
         -- Verifica se o item na mão é a esfera (qualquer variante)
         if item_name ~= "nh_nodes:sphere" and item_name ~= "nh_nodes:sphere_placed" then
             core.chat_send_player(puncher:get_player_name(), S "This won't work... I need something more powerful")
             return
         end
-
         -- Efeito de partículas de destruição
         core.add_particlespawner({
             amount = 50,
@@ -3979,32 +3904,23 @@ core.register_node("nh_nodes:giantcrabstatue", {
                 name = "spark_particle.png^[colorize:#76008d:150", -- purpura
             },
         })
-
         -- Som de destruição (usa o som de dano do caranguejo)
-        --core.sound_play("vulto_hurt", {pos = pos, gain = 1.0, max_hear_distance = 16})
-
+        -- core.sound_play("vulto_hurt", {pos = pos, gain = 1.0, max_hear_distance = 16})
         -- Remove a estátua
         core.remove_node(pos)
-
         -- Coloca areia na posição da estátua imediatamente
         core.set_node(pos, { name = "nh_nodes:wet_sand" })
-
         -- Spawna o Giant Crab na posição da estátua
         -- Spawna o mob após 2 segundos
-        core.after(0.25, function()
-            core.add_entity(pos, "nh_mob:giantcrab")
-        end)
-
+        core.after(0.25, function() core.add_entity(pos, "nh_mob:giantcrab") end)
         -- Consome a esfera da mão do jogador
         local inv = puncher:get_inventory()
         item:take_item(1)
         puncher:set_wielded_item(item)
-
         -- Avisa o jogador
         core.chat_send_player(puncher:get_player_name(), S "The statue shatters... something awakens!")
     end,
 })
-
 core.register_node("nh_nodes:redcrystal", {
     description = S "Red Crystal" .. "\n" .. S "[Light/Air]" .. "\n" .. S "(Squat down to breathe)",
     drawtype = "mesh",
@@ -4013,20 +3929,10 @@ core.register_node("nh_nodes:redcrystal", {
     sunlight_propagates = true,
     paramtype = "light",
     paramtype2 = "facedir",
-
     groups = { oddly_breakable_by_hand = 1 },
-
     light_source = 14,
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 }
-    },
-
+    collision_box = { type = "fixed", fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 } },
+    selection_box = { type = "fixed", fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 } },
     on_punch = function(pos, node, puncher, pointed_thing)
         -- Efeito de partículas de destruição
         core.add_particlespawner({
@@ -4047,12 +3953,10 @@ core.register_node("nh_nodes:redcrystal", {
                 name = "spark_particle.png^[colorize:#76008d:150", -- purpura
             },
         })
-
         -- Som de destruição (usa o som de dano do caranguejo)
-        --core.sound_play("vulto_hurt", {pos = pos, gain = 1.0, max_hear_distance = 16})
+        -- core.sound_play("vulto_hurt", {pos = pos, gain = 1.0, max_hear_distance = 16})
     end,
 })
-
 core.register_node("nh_nodes:sentinelstatue", {
     description = S "Sentinel Statue" .. "\n" .. S "[Unknown]",
     drawtype = "mesh",
@@ -4061,32 +3965,19 @@ core.register_node("nh_nodes:sentinelstatue", {
     sunlight_propagates = true,
     paramtype = "light",
     paramtype2 = "facedir",
-
     groups = { falling_node = 1 },
-
     light_source = 7,
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.65, -0.5, -0.65, 0.65, 3.5, 0.65 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.65, -0.5, -0.65, 0.65, 3.5, 0.65 }
-    },
-
+    collision_box = { type = "fixed", fixed = { -0.65, -0.5, -0.65, 0.65, 3.5, 0.65 } },
+    selection_box = { type = "fixed", fixed = { -0.65, -0.5, -0.65, 0.65, 3.5, 0.65 } },
     on_punch = function(pos, node, puncher, pointed_thing)
         if not puncher or not puncher:is_player() then return end
-
         local item = puncher:get_wielded_item()
         local item_name = item:get_name()
-
         -- Verifica se o item na mão é a esfera (qualquer variante)
         if item_name ~= "nh_nodes:sphere" and item_name ~= "nh_nodes:sphere_placed" then
             core.chat_send_player(puncher:get_player_name(), S "This won't work... I need something more powerful")
             return
         end
-
         -- Efeito de partículas de destruição
         core.add_particlespawner({
             amount = 50,
@@ -4106,53 +3997,35 @@ core.register_node("nh_nodes:sentinelstatue", {
                 name = "spark_particle.png^[colorize:#FF8800:150", -- dourado
             },
         })
-
         -- Som de destruição (usa o som de dano do caranguejo)
-        --core.sound_play("vulto_hurt", {pos = pos, gain = 1.0, max_hear_distance = 16})
-
+        -- core.sound_play("vulto_hurt", {pos = pos, gain = 1.0, max_hear_distance = 16})
         -- Remove a estátua
         core.remove_node(pos)
-
         -- Coloca grama na posição da estátua imediatamente
         --core.set_node(pos, {name = "nh_nodes:wet_sand"})
-
         -- Spawna o Giant Crab na posição da estátua
         -- Spawna o mob após 2 segundos
-        core.after(0.25, function()
-            core.add_entity(pos, "nh_mob:sentinel")
-        end)
-
+        core.after(0.25, function() core.add_entity(pos, "nh_mob:sentinel") end)
         -- Consome a esfera da mão do jogador
         local inv = puncher:get_inventory()
         item:take_item(1)
         puncher:set_wielded_item(item)
-
         -- Avisa o jogador
         core.chat_send_player(puncher:get_player_name(), S "The statue shatters... something awakens!")
     end,
 })
-
 core.register_node("nh_nodes:sphere", {
     description = S "Sphere of Vertices" .. "\n" .. S "[Unknown]",
     drawtype = "mesh",
     mesh = "ball_crystal.obj",
     tiles = { "ball2.png" },
-
     sunlight_propagates = true,
     use_texture_alpha = "blend",
     paramtype = "light",
     paramtype2 = "facedir",
     groups = { oddly_breakable_by_hand = 1, not_in_creative_inventory = 0 },
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 }
-    },
-
+    collision_box = { type = "fixed", fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 } },
+    selection_box = { type = "fixed", fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 } },
     -- Ao colocar: troca para a versão invisível e spawna entidades
     after_place_node = function(pos, placer, itemstack)
         core.set_node(pos, { name = "nh_nodes:sphere_placed" })
@@ -4160,46 +4033,32 @@ core.register_node("nh_nodes:sphere", {
         core.add_entity(pos, "nh_nodes:crystal_anim")
     end,
 })
-
 -- Nó invisível (versão que fica no mundo)
 core.register_node("nh_nodes:sphere_placed", {
     description = S "Bubble of Vertices" .. "\n" .. S "[Unknown]",
     drawtype = "mesh",
     mesh = "ball2.obj",
     tiles = { "empty.png" }, -- PNG 1x1 totalmente transparente
-
     sunlight_propagates = true,
     use_texture_alpha = "blend",
     paramtype = "light",
     paramtype2 = "facedir",
     groups = { oddly_breakable_by_hand = 1, not_in_creative_inventory = 1 },
     light_source = 9,
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 }
-    },
-
+    collision_box = { type = "fixed", fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 } },
+    selection_box = { type = "fixed", fixed = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 } },
     -- Ao quebrar: remove entidades e dropa o item original
     after_dig_node = function(pos, oldnode, oldmetadata, digger)
         for _, obj in ipairs(core.get_objects_inside_radius(pos, 0.6)) do
             local ent = obj:get_luaentity()
-            if ent and (ent.name == "nh_nodes:sphere_anim" or ent.name == "nh_nodes:crystal_anim") then
-                obj:remove()
-            end
+            if ent and (ent.name == "nh_nodes:sphere_anim" or ent.name == "nh_nodes:crystal_anim") then obj:remove() end
         end
         -- Dropa o item visível (com textura) em vez do invisível
         digger:get_inventory():add_item("main", "nh_nodes:sphere")
     end,
-
     -- Sem drop automático (já feito manualmente acima)
     drop = "",
 })
-
 -- Entidade só visual, com a animação do GLB
 core.register_entity("nh_nodes:sphere_anim", {
     initial_properties = {
@@ -4212,15 +4071,8 @@ core.register_entity("nh_nodes:sphere_anim", {
         is_visible = true,
         glow = 4,
     },
-
-
     on_activate = function(self, staticdata)
-        self.object:set_animation(
-            { x = 0, y = 150 },
-            15,
-            0,
-            true
-        )
+        self.object:set_animation({ x = 0, y = 150 }, 15, 0, true)
         --   self.object:set_properties({
         --       use_texture_alpha = true,
         --       textures = {
@@ -4229,13 +4081,8 @@ core.register_entity("nh_nodes:sphere_anim", {
         --       },
         --   })
     end,
-
-    on_step = function(self, dtime)
-    end,
-
-    get_staticdata = function(self)
-        return "saved"
-    end,
+    on_step = function(self, dtime) end,
+    get_staticdata = function(self) return "saved" end,
 })
 
 
@@ -4251,15 +4098,8 @@ core.register_entity("nh_nodes:crystal_anim", {
         is_visible = true,
         --glow = 10,
     },
-
-
     on_activate = function(self, staticdata)
-        self.object:set_animation(
-            { x = 0, y = 150 },
-            0.05,
-            0,
-            true
-        )
+        self.object:set_animation({ x = 0, y = 150 }, 0.05, 0, true)
         self.object:set_properties({
             use_texture_alpha = true,
             --       textures = {
@@ -4268,13 +4108,8 @@ core.register_entity("nh_nodes:crystal_anim", {
             --       },
         })
     end,
-
-    on_step = function(self, dtime)
-    end,
-
-    get_staticdata = function(self)
-        return "saved"
-    end,
+    on_step = function(self, dtime) end,
+    get_staticdata = function(self) return "saved" end,
 })
 
 
@@ -4284,76 +4119,50 @@ core.register_node("nh_nodes:orb_empty", {
     mesh = "orb.obj",
     tiles = { "orb_node.png" },
     inventory_image = "orbspawner.png",
-
     sunlight_propagates = true,
     use_texture_alpha = "blend",
-
     walkable = false,
     paramtype = "light",
     paramtype2 = "facedir",
     groups = { oddly_breakable_by_hand = 1 },
     --sounds = default.node_sound_wood_defaults(),
-
     -- Configuração mão direita
     wielded_bone_position = {
         pos = { x = 1.8, y = 0, z = 0 },
         --rot = {x = 90, y = 0, z = 90}
     },
     wielded_visual_size = { x = 0.2, y = 0.2, z = 0.2 },
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.14, -0.5, -0.14, 0.14, 0, 0.14 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.14, -0.5, -0.14, 0.14, -0.15, 0.14 }
-    },
+    collision_box = { type = "fixed", fixed = { -0.14, -0.5, -0.14, 0.14, 0, 0.14 } },
+    selection_box = { type = "fixed", fixed = { -0.14, -0.5, -0.14, 0.14, -0.15, 0.14 } },
 })
-
 -- Função auxiliar para registrar o "ovo" como node com mesh
 function register_orb_egg(mob_name, description, texture)
     -- "nh_mob:octopus" → "octopus_orb"
     local short_name = mob_name:match(":(.+)") .. "" -- "_orb"
-
     core.register_node("nh_mob:" .. short_name, {
         description = description .. "\n" .. S "[Mob Spawner]",
         drawtype = "mesh",
         mesh = "orb.obj",
         tiles = { texture or "orb_node.png" },
         inventory_image = "orbspawner.png",
-
         sunlight_propagates = true,
         use_texture_alpha = "blend",
         walkable = false,
         paramtype = "light",
         paramtype2 = "facedir",
         groups = { oddly_breakable_by_hand = 1 },
-
-        collision_box = {
-            type = "fixed",
-            fixed = { -0.14, -0.5, -0.14, 0.14, 0, 0.14 }
-        },
-        selection_box = {
-            type = "fixed",
-            fixed = { -0.14, -0.5, -0.14, 0.14, -0.15, 0.14 }
-        },
-
+        collision_box = { type = "fixed", fixed = { -0.14, -0.5, -0.14, 0.14, 0, 0.14 } },
+        selection_box = { type = "fixed", fixed = { -0.14, -0.5, -0.14, 0.14, -0.15, 0.14 } },
         -- Configuração mão direita
-        wielded_bone_position = {
-            pos = { x = 1.8, y = 0, z = 0 },
-        },
+        wielded_bone_position = { pos = { x = 1.8, y = 0, z = 0 }, },
         wielded_visual_size = { x = 0.2, y = 0.2, z = 0.2 },
-
         -- Ao clicar com o orbe em um node, spawna o mob
         on_place = function(itemstack, placer, pointed_thing)
             if pointed_thing.type ~= "node" then return end
-
             -- Só spawna se o player NÃO estiver agachado
             local controls = placer:get_player_control()
             -- Agachado: coloca o node normalmente
             if controls.sneak then return minetest.item_place(itemstack, placer, pointed_thing) end
-
             -- Em pé: spawna o mob
             local pos = pointed_thing.above
             minetest.add_entity(pos, mob_name)
@@ -4382,7 +4191,6 @@ core.register_node("nh_nodes:nut", {
         return itemstack
     end,
 })
-
 -- Folhas com 1 noz
 core.register_node("nh_nodes:leaves_nut", {
     description = S "Leaves with Nut",
@@ -4413,7 +4221,6 @@ core.register_node("nh_nodes:leaves_nut", {
         return itemstack
     end,
 })
-
 -- Folhas com 2 nozes
 core.register_node("nh_nodes:leaves_nut2", {
     description = S "Leaves with 2 Nuts",
@@ -4445,7 +4252,6 @@ core.register_node("nh_nodes:leaves_nut2", {
         return itemstack
     end,
 })
-
 -- Folhas com 3 nozes
 core.register_node("nh_nodes:leaves_nut3", {
     description = S "Leaves with 3 Nuts",
@@ -4514,7 +4320,6 @@ core.register_node("nh_nodes:blueberry", {
         return itemstack
     end,
 })
-
 core.register_node("nh_nodes:chickenegg", {
     description = S "Chicken Egg" .. "\n" .. S "Nutrition: +1",
     drawtype = "mesh",
@@ -4534,26 +4339,17 @@ core.register_node("nh_nodes:chickenegg", {
         return itemstack
     end,
 })
-
 core.register_node("nh_nodes:friedchickenegg", {
     description = S "Fried Egg" .. "\n" .. S "(Chicken Egg)" .. "\n" .. S "Nutrition: +4",
     drawtype = "mesh",
     mesh = "friedegg.obj",
     tiles = { "friedegg.png" },
-
     paramtype = "light",
     walkable = false,
     groups = { snappy = 3, oddly_breakable_by_hand = 1 },
     --sounds = default.node_sound_wood_defaults(),
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.25, 0, -0.25, 0.25, 0.1, 0.25 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.08, -0.5, -0.08, 0.08, -0.28, 0.08 }
-    },
+    collision_box = { type = "fixed", fixed = { -0.25, 0, -0.25, 0.25, 0.1, 0.25 } },
+    selection_box = { type = "fixed", fixed = { -0.08, -0.5, -0.08, 0.08, -0.28, 0.08 } },
     --visual_size = {x = 15, y = 15},
     -- Tornar comestível
     on_use = function(itemstack, user, pointed_thing)
@@ -4606,7 +4402,6 @@ core.register_node("nh_nodes:chicken", {
     visual_size = { x = 15, y = 15 },
 
 })
-
 core.register_node("nh_nodes:rawchicken", {
     description = S "Raw Chicken" .. "\n" .. S "Nutrition: +4",
     drawtype = "mesh",
