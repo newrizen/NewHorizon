@@ -1930,10 +1930,9 @@ register_craft_station("nh_nodes:cobblestone", {
 })
 core.register_node("nh_nodes:charcoal", {
     description = S "Charcoal",
-    tiles = {
-        "topdowncharcoal.png", -- topo
-        "topdowncharcoal.png", -- base
-        "charcoal.png",        -- lados (direita, esquerda, frente, trás)
+    tiles = { "topdowncharcoal.png", -- topo
+        "topdowncharcoal.png",       -- base
+        "charcoal.png",              -- lados (direita, esquerda, frente, trás)
     },
     groups = { choppy = 3, armor_head = 1 },
     stack_max = 1,
@@ -2670,7 +2669,6 @@ core.register_node("nh_nodes:cricket", {
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
     -- Configuração mão esquerda
     offhand_bone_position = {
         pos = { x = 1.5, y = 0, z = 0 }
@@ -2889,16 +2887,11 @@ register_craft_station("nh_nodes:campfire", {
         local objs = core.get_objects_inside_radius(pos, 0.5)
         for _, obj in ipairs(objs) do
             local ent = obj:get_luaentity()
-            if ent and ent.name == "nh_nodes:campfire_flame_entity" then
-                obj:remove()
-            end
+            if ent and ent.name == "nh_nodes:campfire_flame_entity" then obj:remove() end
         end
     end,
 })
-
----------------------------
 -- ENTIDADE DA CHAMA DA PALHA
----------------------------
 core.register_entity("nh_nodes:campfire_flame_entity", {
     initial_properties = {
         physical = false,
@@ -2913,49 +2906,29 @@ core.register_entity("nh_nodes:campfire_flame_entity", {
         pointable = true,
         glow = 14,
     },
-
     _straw_pos = nil,
     _timer = 0,
     _anim_timer = 0,
     _current_frame = 0,
-
     on_activate = function(self, staticdata)
         if staticdata ~= "" then
             local data = core.deserialize(staticdata)
-            if data and data.straw_pos then
-                self._straw_pos = data.straw_pos
-            end
+            if data and data.straw_pos then self._straw_pos = data.straw_pos end
         end
         self._timer = 0
-
-        self.object:set_sprite(
-            { x = 0, y = 0 },
-            1,
-            1.0,
-            false
-        )
-
+        self.object:set_sprite({ x = 0, y = 0 }, 1, 1.0, false)
         self.object:set_texture_mod("^[verticalframe:8:0")
     end,
-
-    get_staticdata = function(self)
-        return core.serialize({ straw_pos = self._straw_pos })
-    end,
-
+    get_staticdata = function(self) return core.serialize({ straw_pos = self._straw_pos }) end,
     -- Detecta quando é golpeado para acender tochas
     on_punch = function(self, puncher, time_from_last_punch, tool_capabilities, dir)
-        if not puncher or not puncher:is_player() then
-            return
-        end
-
+        if not puncher or not puncher:is_player() then return end
         local wielded = puncher:get_wielded_item()
         local wielded_name = wielded:get_name()
-
         -- Verifica se está segurando uma tocha apagada
         if wielded_name == "nh_nodes:torch" then
             wielded:take_item()
             puncher:set_wielded_item(wielded)
-
             local inv = puncher:get_inventory()
             if inv then
                 local leftover = inv:add_item("main", "nh_nodes:torch2")
@@ -2964,43 +2937,32 @@ core.register_entity("nh_nodes:campfire_flame_entity", {
                     core.add_item(pos, leftover)
                 end
             end
-
-            core.sound_play("fire_flint_and_steel", {
-                pos = self.object:get_pos(),
-                gain = 0.5,
-                max_hear_distance = 8,
-            }, true)
+            core.sound_play("fire_flint_and_steel", { pos = self.object:get_pos(), gain = 0.5, max_hear_distance = 8, },
+                true)
         end
     end,
-
     on_step = function(self, dtime)
         self._timer = self._timer + dtime
         self._anim_timer = self._anim_timer + dtime
-
         -- Anima a textura
         if self._anim_timer > (1.0 / 8) then
             self._anim_timer = 0
             self._current_frame = (self._current_frame + 1) % 8
             self.object:set_texture_mod("^[verticalframe:8:" .. self._current_frame)
         end
-
         -- Verifica se a palha ainda existe
         if self._timer > 0.5 then
             self._timer = 0
-
             if not self._straw_pos then
                 self.object:remove()
                 return
             end
-
             local node = core.get_node(self._straw_pos)
-
             -- Se a palha foi removida, remove a chama
             if node.name ~= "nh_nodes:campfire" then
                 self.object:remove()
                 return
             end
-
             -- Verifica se ainda deve ter chama
             local meta = core.get_meta(self._straw_pos)
             if meta:get_int("has_flame") ~= 1 then
@@ -3010,182 +2972,112 @@ core.register_entity("nh_nodes:campfire_flame_entity", {
         end
     end,
 })
-
 core.register_node("nh_nodes:spinningtop", {
     description = S "Oak Spinningtop" .. "\n" .. S "[Battle Toy]",
     drawtype = "mesh",
     mesh = "piao.obj",
     tiles = { "oakpiao.png" },
     inventory_image = "oakpiaoinv.png",
-
     walkable = false,
     paramtype = "light",
     paramtype2 = "facedir",
     groups = { snappy = 3, oddly_breakable_by_hand = 1 },
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 }
-    },
-
+    collision_box = { type = "fixed", fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 } },
+    selection_box = { type = "fixed", fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 } },
     -- Configuração mão direita
-    wielded_bone_position = {
-        pos = { x = -0.25, y = 0.5, z = 0 },
-        rot = { x = 0, y = 0, z = 45 },
-    },
+    wielded_bone_position = { pos = { x = -0.25, y = 0.5, z = 0 }, rot = { x = 0, y = 0, z = 45 }, },
     wielded_visual_size = { x = 0.25, y = 0.25, z = 0.25 },
-
     -- Tornar comestível
     --on_use = function(itemstack, user, pointed_thing)
     --restore_hunger(user, 2)  -- Restaura 4 pontos
     --itemstack:take_item()
     --return itemstack
     --end,
-
     -- Spawna o mob ao colocar o node no chão
     on_place = function(itemstack, placer, pointed_thing)
-        if pointed_thing.type ~= "node" then
-            return itemstack
-        end
-
+        if pointed_thing.type ~= "node" then return itemstack end
         local pos = pointed_thing.above -- posição onde vai spawnar
-
         -- Spawna o mob
         local mob = minetest.add_entity(pos, "nh_mob:spinningtop")
-
         if mob then
             -- Aplica a rotação do jogador ao mob
             if placer then
                 local yaw = placer:get_look_horizontal()
                 mob:set_yaw(yaw)
             end
-
             -- Consome o item da mão
             itemstack:take_item()
         end
-
         return itemstack
     end,
 })
-
 core.register_node("nh_nodes:spinningtop2", {
     description = S "Palm Spinningtop" .. "\n" .. S "[Battle Toy]",
     drawtype = "mesh",
     mesh = "piao.obj",
     tiles = { "palmpiao.png" },
     inventory_image = "palmpiaoinv.png",
-
     walkable = false,
     paramtype = "light",
     paramtype2 = "facedir",
     groups = { snappy = 3, oddly_breakable_by_hand = 1 },
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 }
-    },
-
+    collision_box = { type = "fixed", fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 } },
+    selection_box = { type = "fixed", fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 } },
     -- Configuração mão direita
-    wielded_bone_position = {
-        pos = { x = -0.25, y = 0.5, z = 0 },
-        rot = { x = 0, y = 0, z = 45 },
-    },
+    wielded_bone_position = { pos = { x = -0.25, y = 0.5, z = 0 }, rot = { x = 0, y = 0, z = 45 }, },
     wielded_visual_size = { x = 0.25, y = 0.25, z = 0.25 },
-
-
     -- Spawna o mob ao colocar o node no chão
     on_place = function(itemstack, placer, pointed_thing)
-        if pointed_thing.type ~= "node" then
-            return itemstack
-        end
-
+        if pointed_thing.type ~= "node" then return itemstack end
         local pos = pointed_thing.above -- posição onde vai spawnar
-
         -- Spawna o mob
         local mob = minetest.add_entity(pos, "nh_mob:spinningtop2")
-
         if mob then
             -- Aplica a rotação do jogador ao mob
             if placer then
                 local yaw = placer:get_look_horizontal()
                 mob:set_yaw(yaw)
             end
-
             -- Consome o item da mão
             itemstack:take_item()
         end
-
         return itemstack
     end,
 })
-
 core.register_node("nh_nodes:spinningtop3", {
     description = S "Pine Spinningtop" .. "\n" .. S "[Battle Toy]",
     drawtype = "mesh",
     mesh = "piao.obj",
     tiles = { "pinepiao.png" },
     inventory_image = "pinepiaoinv.png",
-
     walkable = false,
     paramtype = "light",
     paramtype2 = "facedir",
     groups = { snappy = 3, oddly_breakable_by_hand = 1 },
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 }
-    },
-
+    collision_box = { type = "fixed", fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 } },
+    selection_box = { type = "fixed", fixed = { -0.125, -0.5, -0.125, 0.125, -0.25, 0.125 } },
     -- Configuração mão direita
-    wielded_bone_position = {
-        pos = { x = -0.25, y = 0.5, z = 0 },
-        rot = { x = 0, y = 0, z = 45 },
-    },
+    wielded_bone_position = { pos = { x = -0.25, y = 0.5, z = 0 }, rot = { x = 0, y = 0, z = 45 }, },
     wielded_visual_size = { x = 0.25, y = 0.25, z = 0.25 },
-
     -- Spawna o mob ao colocar o node no chão
     on_place = function(itemstack, placer, pointed_thing)
-        if pointed_thing.type ~= "node" then
-            return itemstack
-        end
-
+        if pointed_thing.type ~= "node" then return itemstack end
         local pos = pointed_thing.above -- posição onde vai spawnar
-
         -- Spawna o mob
         local mob = minetest.add_entity(pos, "nh_mob:spinningtop3")
-
         if mob then
             -- Aplica a rotação do jogador ao mob
             if placer then
                 local yaw = placer:get_look_horizontal()
                 mob:set_yaw(yaw)
             end
-
             -- Consome o item da mão
             itemstack:take_item()
         end
-
         return itemstack
     end,
 })
-
-
--- ========================================
 -- EXEMPLOS DE USO
--- ========================================
-
 -- Exemplo 1: Mesa de Craft 2x2x2 (original)
 register_craft_station("nh_nodes:craft_table", {
     description = S "Production Bench",
@@ -3194,40 +3086,24 @@ register_craft_station("nh_nodes:craft_table", {
     tiles = { "craft_table.png" },
     title = "Bancada de Produção 2x2x2",
     grid_size = 8,
-
     -- Configuração mão direita
     wielded_bone_position = {
         pos = { x = 0.5, y = 0.5, z = 1.65 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
     -- Configuração mão esquerda
     offhand_bone_position = {
         pos = { x = 1.5, y = 0, z = 0 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
-    positions = {
-        { x = -0.2, y = 0.7, z = -0.2 }, { x = 0.2, y = 0.7, z = -0.2 },
-        { x = -0.2, y = 0.7, z = 0.2 }, { x = 0.2, y = 0.7, z = 0.2 },
-        { x = -0.2, y = 1.1, z = -0.2 }, { x = 0.2, y = 1.1, z = -0.2 },
-        { x = -0.2, y = 1.1, z = 0.2 }, { x = 0.2, y = 1.1, z = 0.2 },
-    },
-
+    positions = { { x = -0.2, y = 0.7, z = -0.2 }, { x = 0.2, y = 0.7, z = -0.2 }, { x = -0.2, y = 0.7, z = 0.2 }, { x = 0.2, y = 0.7, z = 0.2 }, { x = -0.2, y = 1.1, z = -0.2 }, { x = 0.2, y = 1.1, z = -0.2 }, { x = -0.2, y = 1.1, z = 0.2 }, { x = 0.2, y = 1.1, z = 0.2 }, },
     tool_slot_pos = { x = 5.6, y = 1 }, -- ajusta x e y até ficar no lugar certo
-
     output_position = { x = 0, y = 1.7, z = 0 },
-
-    layers = {
-        { name = "Camada Inferior", x = 0.5, width = 2, height = 2, start_index = 0 },
-        { name = "Camada Superior", x = 3,   width = 2, height = 2, start_index = 4 },
-    },
-
+    layers = { { name = "Camada Inferior", x = 0.5, width = 2, height = 2, start_index = 0 }, { name = "Camada Superior", x = 3, width = 2, height = 2, start_index = 4 }, },
     recipes = recipes_table
 })
-
 -- Exemplo 2: Fornalha 3x3 simples (SEM mesh, usando drawtype normal)
 register_craft_station("nh_nodes:furnace", {
     description = S "Furnace",
@@ -3237,50 +3113,28 @@ register_craft_station("nh_nodes:furnace", {
     tiles = { "stonefurnace.png" }, --cobblestone.png
     paramtype = "light",            -- Necessário para iluminação correta
     paramtype2 = "facedir",         -- IMPORTANTE: paramtype2, não paramtype
-
     -- Caixas de colisão e seleção
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, -0.5, 0.5, 2.5, 0.5 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, -0.5, 0.5, 2.5, 0.5 }
-    },
-
+    collision_box = { type = "fixed", fixed = { -0.5, -0.5, -0.5, 0.5, 2.5, 0.5 } },
+    selection_box = { type = "fixed", fixed = { -0.5, -0.5, -0.5, 0.5, 2.5, 0.5 } },
     -- Configuração mão direita
     wielded_bone_position = {
         pos = { x = -2.5, y = -1, z = 0 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
     -- Configuração mão esquerda
     offhand_bone_position = {
         pos = { x = -1.5, y = -1, z = 0 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
     grid_size = 9,
-
-    positions = {
-        { x = -0.3, y = 0.9, z = -0.3 }, { x = 0, y = 0.9, z = -0.3 }, { x = 0.3, y = 0.9, z = -0.3 },
-        { x = -0.3, y = 0.9, z = 0 }, { x = 0, y = 0.9, z = 0 }, { x = 0.3, y = 0.9, z = 0 },
-        { x = -0.3, y = 0.9, z = 0.3 }, { x = 0, y = 0.9, z = 0.3 }, { x = 0.3, y = 0.9, z = 0.3 },
-    },
-
+    positions = { { x = -0.3, y = 0.9, z = -0.3 }, { x = 0, y = 0.9, z = -0.3 }, { x = 0.3, y = 0.9, z = -0.3 }, { x = -0.3, y = 0.9, z = 0 }, { x = 0, y = 0.9, z = 0 }, { x = 0.3, y = 0.9, z = 0 }, { x = -0.3, y = 0.9, z = 0.3 }, { x = 0, y = 0.9, z = 0.3 }, { x = 0.3, y = 0.9, z = 0.3 }, },
     tool_slot_pos = { x = 4.3, y = 1 }, -- ajusta x e y até ficar no lugar certo
-
     output_position = { x = 0, y = 1.2, z = 0 },
-
-    layers = {
-        { name = S "3x3 Grid", x = 0.5, width = 3, height = 3, start_index = 0 },
-    },
-
+    layers = { { name = S "3x3 Grid", x = 0.5, width = 3, height = 3, start_index = 0 }, },
     recipes = recipes_furnace
 })
-
 -- Bancada Avançada 3x3x3 simples (SEM mesh)
 register_craft_station("nh_nodes:advanced_bench", {
     description = S "Advanced Bench",
@@ -3288,24 +3142,12 @@ register_craft_station("nh_nodes:advanced_bench", {
     tiles = { "" }, --advanced_bench.png
     title = S "3x3x3 Advanced Bench",
     grid_size = 4,
-
-    positions = {
-        { x = -0.2, y = 0.9, z = -0.2 }, { x = 0.2, y = 0.9, z = -0.2 },
-        { x = -0.2, y = 0.9, z = 0.2 }, { x = 0.2, y = 0.9, z = 0.2 },
-    },
-
+    positions = { { x = -0.2, y = 0.9, z = -0.2 }, { x = 0.2, y = 0.9, z = -0.2 }, { x = -0.2, y = 0.9, z = 0.2 }, { x = 0.2, y = 0.9, z = 0.2 }, },
     tool_slot_pos = { x = 3.1, y = 1 }, -- ajusta x e y até ficar no lugar certo
-
     output_position = { x = 0, y = 1.4, z = 0 },
-
-    layers = {
-        { name = S "2x2 Grid", x = 0.5, width = 2, height = 2, start_index = 0 },
-    },
-
+    layers = { { name = S "2x2 Grid", x = 0.5, width = 2, height = 2, start_index = 0 }, },
     recipes = recipes_table
 })
-
-
 -- Prancha
 core.register_node("nh_nodes:oakplank", {
     description = S "Oak Plank",
@@ -3313,39 +3155,23 @@ core.register_node("nh_nodes:oakplank", {
     mesh = "oakplank.obj",
     tiles = { "oakwood.png" },
     groups = { choppy = 3 },
-
     paramtype = "light",
     paramtype2 = "wallmounted",
-
     -- Configuração mão direita
     wielded_bone_position = {
         pos = { x = -0.5, y = -0.9, z = 0.2 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
     -- Configuração mão esquerda
     offhand_bone_position = {
         pos = { x = 0, y = -0.9, z = -1 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
-    selection_box = {
-        type = "wallmounted",
-        wall_top = { -0.5, 0, -0.5, 0.5, 0.5, 0.5 },
-        wall_bottom = { -0.5, -0.5, -0.5, 0.5, 0, 0.5 },
-        wall_side = { -0.5, -0.5, -0.5, 0, 0.5, 0.5 },
-    },
-
-    node_box = {
-        type = "wallmounted",
-        wall_top = { 0, 0, 0, 0, 0.5, 0 },
-        wall_bottom = { 0, -0.5, 0, 0, 0, 0 },
-        wall_side = { -0.5, 0, 0, -0.5, 0.5, 0 },
-    },
+    selection_box = { type = "wallmounted", wall_top = { -0.5, 0, -0.5, 0.5, 0.5, 0.5 }, wall_bottom = { -0.5, -0.5, -0.5, 0.5, 0, 0.5 }, wall_side = { -0.5, -0.5, -0.5, 0, 0.5, 0.5 }, },
+    node_box = { type = "wallmounted", wall_top = { 0, 0, 0, 0, 0.5, 0 }, wall_bottom = { 0, -0.5, 0, 0, 0, 0 }, wall_side = { -0.5, 0, 0, -0.5, 0.5, 0 }, },
 })
-
 -- Tábua
 core.register_node("nh_nodes:oakboard", {
     description = S "Oak Board",
@@ -3355,47 +3181,31 @@ core.register_node("nh_nodes:oakboard", {
     groups = { choppy = 3 },
     paramtype = "light",
     paramtype2 = "facedir",
-
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, 0.38, 0.5, 0.5, 0.5 },
-    },
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.5, -0.5, -0.03, 0.5, 0.5, 0.5 },
-    },
-
+    selection_box = { type = "fixed", fixed = { -0.5, -0.5, 0.38, 0.5, 0.5, 0.5 }, },
+    collision_box = { type = "fixed", fixed = { -0.5, -0.5, -0.03, 0.5, 0.5, 0.5 }, },
     -- Configuração mão direita
     wielded_bone_position = {
         pos = { x = 0, y = -0.9, z = -0.8 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
     -- Configuração mão esquerda
     offhand_bone_position = {
         pos = { x = 0, y = -0.9, z = -1.2 }
         --rot = {x = 0, y = 0, z = -110}
     },
     -- wielded_visual_size = {x = 0.25, y = 0.25, z = 0.25},
-
     on_place = function(itemstack, placer, pointed_thing)
-        if not placer or not placer:is_player() then
-            return itemstack
-        end
-
+        if not placer or not placer:is_player() then return itemstack end
         -- Detecta em qual face foi clicado
         local under = pointed_thing.under
         local above = pointed_thing.above
         local click_dir = vector.subtract(above, under)
-
         -- Pega a direção horizontal do jogador
         local yaw = placer:get_look_horizontal()
         local player_dir = core.yaw_to_dir(yaw)
         local player_facedir = core.dir_to_facedir(player_dir)
-
         local facedir
-
         if click_dir.y == 1 then
             -- Clicado no topo (chão) - tábua em pe com a lateral fina pra mim
             facedir = player_facedir
@@ -3411,11 +3221,9 @@ core.register_node("nh_nodes:oakboard", {
             local wall_facedir = core.dir_to_facedir(click_dir)
             facedir = wall_facedir + 12 -- Valor diferente para paredes X
         end
-
         return core.item_place(itemstack, placer, pointed_thing, facedir)
     end,
 })
-
 -- Tarugo
 core.register_node("nh_nodes:oakdowel", {
     description = S "Oak Dowel" .. "\n" .. S "Reach: +2",
@@ -3423,25 +3231,11 @@ core.register_node("nh_nodes:oakdowel", {
     mesh = "oakdowel.obj",
     tiles = { "oakwood.png" },
     groups = { choppy = 3 },
-
     range = 5,
-
     paramtype = "light",
     paramtype2 = "wallmounted",
-
-    selection_box = {
-        type = "wallmounted",
-        wall_top = { -0.1, -0.5, -0.1, 0.1, 0.5, 0.1 },
-        wall_bottom = { -0.1, -0.5, -0.1, 0.1, 0.5, 0.1 },
-        wall_side = { -0.5, -0.1, -0.1, 0.5, 0.1, 0.1 },
-    },
-
-    node_box = {
-        type = "wallmounted",
-        wall_top = { -0.0625, 0.5 - 0.5625, -0.0625, 0.0625, 0.5, 0.0625 },
-        wall_bottom = { -0.0625, -0.5, -0.0625, 0.0625, -0.5 + 0.5625, 0.0625 },
-        wall_side = { -0.5, -0.0625, -0.0625, -0.5 + 0.28125, 0.5, 0.0625 },
-    },
+    selection_box = { type = "wallmounted", wall_top = { -0.1, -0.5, -0.1, 0.1, 0.5, 0.1 }, wall_bottom = { -0.1, -0.5, -0.1, 0.1, 0.5, 0.1 }, wall_side = { -0.5, -0.1, -0.1, 0.5, 0.1, 0.1 }, },
+    node_box = { type = "wallmounted", wall_top = { -0.0625, 0.5 - 0.5625, -0.0625, 0.0625, 0.5, 0.0625 }, wall_bottom = { -0.0625, -0.5, -0.0625, 0.0625, -0.5 + 0.5625, 0.0625 }, wall_side = { -0.5, -0.0625, -0.0625, -0.5 + 0.28125, 0.5, 0.0625 }, },
 })
 
 core.register_node("nh_nodes:torch", {
@@ -3449,39 +3243,27 @@ core.register_node("nh_nodes:torch", {
     drawtype = "mesh",
     mesh = "torch.obj",
     tiles = { "torch.png" },
-    --inventory_image = "tocha_inventario.png",
-    --wield_image = "tocha_inventario.png",
-
+    -- inventory_image = "tocha_inventario.png",
+    -- wield_image = "tocha_inventario.png",
     paramtype = "light",
-    --paramtype2 = "wallmounted",
+    -- paramtype2 = "wallmounted",
     sunlight_propagates = true,
     walkable = false,
-
     groups = { choppy = 2, oddly_breakable_by_hand = 3, flammable = 1 }, -- dig_immediate = 3, attached_node = 1
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 }
-    },
-
-    --selection_box = {
+    collision_box = { type = "fixed", fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 } },
+    selection_box = { type = "fixed", fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 } },
+    -- selection_box = {
     --    type = "wallmounted",
     --    wall_top = {-0.1, 0.5-0.6, -0.1, 0.1, 0.5, 0.1},
     --    wall_bottom = {-0.1, -0.5, -0.1, 0.1, -0.5+0.6, 0.1},
     --     wall_side = {-0.5, -0.1, -0.1, -0.5+0.3, 0.5, 0.1},
-    --},
-
-    --node_box = {
+    -- },
+    -- node_box = {
     --    type = "wallmounted",
     --    wall_top = {-0.0625, 0.5-0.5625, -0.0625, 0.0625, 0.5, 0.0625},
     --    wall_bottom = {-0.0625, -0.5, -0.0625, 0.0625, -0.5+0.5625, 0.0625},
     --    wall_side = {-0.5, -0.0625, -0.0625, -0.5+0.28125, 0.5, 0.0625},
-    --},
-
+    -- },
     -- Quando bater na tocha apagada com tocha acesa ou flame
     on_punch = function(pos, node, puncher, pointed_thing)
         if not puncher or not puncher:is_player() then
