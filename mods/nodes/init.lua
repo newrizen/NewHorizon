@@ -3269,35 +3269,23 @@ core.register_node("nh_nodes:torch", {
         if not puncher or not puncher:is_player() then
             return
         end
-
         local wielded = puncher:get_wielded_item()
         local wielded_name = wielded:get_name()
-
         -- Verifica se está batendo com tocha acesa ou flame
         if wielded_name == "nh_nodes:torch2" or wielded_name == "nh_nodes:flame" then
             -- Pega a orientação (facedir/wallmounted) da tocha apagada
             local param2 = node.param2
-
             -- Troca para tocha acesa mantendo a orientação
             core.set_node(pos, { name = "nh_nodes:torch2", param2 = param2 })
-
             -- Adiciona a chama como entidade (mesmo código do after_place_node)
             local flame_pos = { x = pos.x, y = pos.y + 1, z = pos.z }
             local obj = core.add_entity(flame_pos, "nh_nodes:torch_flame_entity")
             if obj then
                 local ent = obj:get_luaentity()
-                if ent then
-                    ent._torch_pos = pos
-                end
+                if ent then ent._torch_pos = pos end
             end
-
             -- Efeito sonoro de acender fogo
-            core.sound_play("fire_flint_and_steel", {
-                pos = pos,
-                gain = 0.5,
-                max_hear_distance = 8,
-            }, true)
-
+            core.sound_play("fire_flint_and_steel", { pos = pos, gain = 0.5, max_hear_distance = 8, }, true)
             -- Partículas de faísca (opcional)
             core.add_particlespawner({
                 amount = 5,
@@ -3323,84 +3311,54 @@ core.register_node("nh_nodes:torch2", {
     description = S "Torch Lit",
     drawtype = "mesh",
     mesh = "torch.obj",
-    tiles = {
-        "torchfire.png", -- Textura da madeira/base
-    },
-    --inventory_image = "tocha_inventario.png",
-    --wield_image = "tocha_inventario.png",
-
+    tiles = { "torchfire.png", }, -- Textura da madeira/base
+    -- inventory_image = "tocha_inventario.png",
+    -- wield_image = "tocha_inventario.png",
     paramtype = "light",
-    --paramtype2 = "wallmounted",
+    -- paramtype2 = "wallmounted",
     sunlight_propagates = true,
     walkable = false,
     stack_max = 1,                                                       -- limita a 1 tocha acesa por slot
-
     light_source = 13,                                                   -- Luminosidade (0-14, onde 14 é máximo)
-
     groups = { choppy = 2, oddly_breakable_by_hand = 3, flammable = 1 }, -- REMOVIDO: attached_node = 1, dig_immediate = 3
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 }
-    },
-
-    --selection_box = {
+    collision_box = { type = "fixed", fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 } },
+    selection_box = { type = "fixed", fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 } },
+    -- selection_box = {
     --    type = "wallmounted",
     --    wall_top = {-0.1, 0.5-0.6, -0.1, 0.1, 0.5, 0.1},
     --    wall_bottom = {-0.1, -0.5, -0.1, 0.1, -0.5+0.6, 0.1},
     --     wall_side = {-0.5, -0.1, -0.1, -0.5+0.3, 0.5, 0.1},
-    --},
-
-    --node_box = {
+    -- },
+    -- node_box = {
     --    type = "wallmounted",
     --    wall_top = {-0.0625, 0.5-0.5625, -0.0625, 0.0625, 0.5, 0.0625},
     --    wall_bottom = {-0.0625, -0.5, -0.0625, 0.0625, -0.5+0.5625, 0.0625},
     --    wall_side = {-0.5, -0.0625, -0.0625, -0.5+0.28125, 0.5, 0.0625},
-    --},
-
+    -- },
     -- Quando colocada, adiciona a chama no mesmo lugar
     after_place_node = function(pos, placer, itemstack, pointed_thing)
         -- Posição da chama (1 bloco acima)
         local flame_pos = { x = pos.x, y = pos.y + 1, z = pos.z }
-
         -- Cria a ENTIDADE da chama
         local obj = core.add_entity(flame_pos, "nh_nodes:torch_flame_entity")
         if obj then
             local ent = obj:get_luaentity()
-            if ent then
-                ent._torch_pos = pos
-            end
+            if ent then ent._torch_pos = pos end
         end
     end,
-
     -- Quando a tocha é destruída, remove a entidade da chama
     after_destruct = function(pos)
         local flame_pos = { x = pos.x, y = pos.y + 1, z = pos.z }
         local objs = core.get_objects_inside_radius(flame_pos, 0.5)
         for _, obj in ipairs(objs) do
             local ent = obj:get_luaentity()
-            if ent and ent.name == "nh_nodes:torch_flame_entity" then
-                obj:remove()
-            end
+            if ent and ent.name == "nh_nodes:torch_flame_entity" then obj:remove() end
         end
     end,
 })
 -- Node invisível que emite luz
-core.register_node("nh_nodes:torch_light", {
-    drawtype = "airlike",
-    paramtype = "light",
-    sunlight_propagates = true,
-    walkable = false,
-    pointable = false,
-    buildable_to = true,
-    light_source = 13,
-    groups = { not_in_creative_inventory = 1 },
-})
-
+core.register_node("nh_nodes:torch_light",
+    { drawtype = "airlike", paramtype = "light", sunlight_propagates = true, walkable = false, pointable = false, buildable_to = true, light_source = 13, groups = { not_in_creative_inventory = 1 }, })
 -- Registra a entidade de luz
 core.register_node("nh_nodes:crystal_light", {
     drawtype = "airlike", -- invisível, não cria bolsão
@@ -3415,18 +3373,8 @@ core.register_node("nh_nodes:crystal_light", {
 
 core.register_node("nh_nodes:torch_flame", {
     drawtype = "mesh",
-    mesh = "torchflame.obj", -- Você precisará criar esse mesh
-    tiles = {
-        {
-            name = "fire_basic_flame_animated.png",
-            animation = {
-                type = "vertical_frames",
-                aspect_w = 16,
-                aspect_h = 16,
-                length = 1.0,
-            },
-        }
-    },
+    mesh = "torchflame.obj",     -- Você precisará criar esse mesh
+    tiles = { { name = "fire_basic_flame_animated.png", animation = { type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 1.0, }, } },
     stack_max = 1,               -- limita a 1 tocha acesa por slot
     paramtype = "light",
     paramtype2 = "facedir",      -- ADICIONEI: necessário para meshes com transparência
@@ -3439,15 +3387,9 @@ core.register_node("nh_nodes:torch_flame", {
     damage_per_second = 4,
     groups = { not_in_creative_inventory = 1 },
     drop = "",
-
     --visual_scale = 1,
-
 })
-
-
----------------------------
 -- ENTIDADE DA CHAMA DA TOCHA
----------------------------
 core.register_entity("nh_nodes:torch_flame_entity", {
     initial_properties = {
         physical = false,
@@ -3463,51 +3405,31 @@ core.register_entity("nh_nodes:torch_flame_entity", {
         pointable = true,
         glow = 14,
     },
-
     _torch_pos = nil,
     _timer = 0,
     _anim_timer = 0,
     _current_frame = 0,
-
     on_activate = function(self, staticdata)
         if staticdata ~= "" then
             local data = core.deserialize(staticdata)
-            if data and data.torch_pos then
-                self._torch_pos = data.torch_pos
-            end
+            if data and data.torch_pos then self._torch_pos = data.torch_pos end
         end
         self._timer = 0
-
         -- Configura a animação da textura
-        self.object:set_sprite(
-            { x = 0, y = 0 },
-            1,
-            1.0,
-            false
-        )
-
+        self.object:set_sprite({ x = 0, y = 0 }, 1, 1.0, false)
         self.object:set_texture_mod("^[verticalframe:8:0")
     end,
-
-    get_staticdata = function(self)
-        return core.serialize({ torch_pos = self._torch_pos })
-    end,
-
+    get_staticdata = function(self) return core.serialize({ torch_pos = self._torch_pos }) end,
     -- Detecta quando é golpeado com tocha apagada
     on_punch = function(self, puncher, time_from_last_punch, tool_capabilities, dir)
-        if not puncher or not puncher:is_player() then
-            return
-        end
-
+        if not puncher or not puncher:is_player() then return end
         local wielded = puncher:get_wielded_item()
         local wielded_name = wielded:get_name()
-
         -- Verifica se está segurando uma tocha apagada
         if wielded_name == "nh_nodes:torch" then
             -- Remove a tocha apagada do inventário
             wielded:take_item()
             puncher:set_wielded_item(wielded)
-
             -- Adiciona a tocha acesa ao inventário
             local inv = puncher:get_inventory()
             if inv then
@@ -3518,14 +3440,9 @@ core.register_entity("nh_nodes:torch_flame_entity", {
                     core.add_item(pos, leftover)
                 end
             end
-
             -- Efeito sonoro
-            core.sound_play("fire_flint_and_steel", {
-                pos = self.object:get_pos(),
-                gain = 0.5,
-                max_hear_distance = 8,
-            }, true)
-
+            core.sound_play("fire_flint_and_steel", { pos = self.object:get_pos(), gain = 0.5, max_hear_distance = 8, },
+                true)
             -- Partículas de faísca
             core.add_particlespawner({
                 amount = 5,
@@ -3545,29 +3462,23 @@ core.register_entity("nh_nodes:torch_flame_entity", {
             })
         end
     end,
-
     on_step = function(self, dtime)
         self._timer = self._timer + dtime
         self._anim_timer = self._anim_timer + dtime
-
         -- Anima a textura (8 frames, 1 segundo de duração total)
         if self._anim_timer > (1.0 / 8) then
             self._anim_timer = 0
             self._current_frame = (self._current_frame + 1) % 8
             self.object:set_texture_mod("^[verticalframe:8:" .. self._current_frame)
         end
-
         -- Verifica se a tocha ainda existe
         if self._timer > 0.5 then
             self._timer = 0
-
             if not self._torch_pos then
                 self.object:remove()
                 return
             end
-
             local node = core.get_node(self._torch_pos)
-
             -- Se a tocha foi removida ou apagada, remove a chama
             if node.name ~= "nh_nodes:torch2" then
                 self.object:remove()
@@ -3576,21 +3487,10 @@ core.register_entity("nh_nodes:torch_flame_entity", {
         end
     end,
 })
-
 core.register_node("nh_nodes:flame", {
     drawtype = "mesh",
     mesh = "flame.obj", -- Você precisará criar esse mesh
-    tiles = {
-        {
-            name = "fire_basic_flame_animated.png",
-            animation = {
-                type = "vertical_frames",
-                aspect_w = 16,
-                aspect_h = 16,
-                length = 1.0,
-            },
-        }
-    },
+    tiles = { { name = "fire_basic_flame_animated.png", animation = { type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 1.0, }, } },
     paramtype = "light",
     paramtype2 = "facedir",      -- ADICIONEI: necessário para meshes com transparência
     sunlight_propagates = true,
@@ -3602,50 +3502,35 @@ core.register_node("nh_nodes:flame", {
     damage_per_second = 4,
     groups = { not_in_creative_inventory = 1 },
     drop = "",
-
     --visual_scale = 1,
-
 })
-
 core.register_node("nh_nodes:torch3", {
     description = S "Torch Extinguished",
     drawtype = "mesh",
     mesh = "torch.obj",
     tiles = { "torch3.png" },
-    --inventory_image = "tocha_inventario.png",
-    --wield_image = "tocha_inventario.png",
-
-    --paramtype = "light",
-    --paramtype2 = "wallmounted",
-    --sunlight_propagates = true,
+    -- inventory_image = "tocha_inventario.png",
+    -- wield_image = "tocha_inventario.png",
+    -- paramtype = "light",
+    -- paramtype2 = "wallmounted",
+    -- sunlight_propagates = true,
     walkable = false,
-
     groups = { choppy = 2, oddly_breakable_by_hand = 3, flammable = 1 }, -- dig_immediate = 3, attached_node = 1
-
-    collision_box = {
-        type = "fixed",
-        fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 }
-    },
-    selection_box = {
-        type = "fixed",
-        fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 }
-    },
-
-    --selection_box = {
+    collision_box = { type = "fixed", fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 } },
+    selection_box = { type = "fixed", fixed = { -0.1, -0.5, -0.1, 0.1, 0.37, 0.1 } },
+    -- selection_box = {
     --    type = "wallmounted",
     --    wall_top = {-0.1, 0.5-0.6, -0.1, 0.1, 0.5, 0.1},
     --    wall_bottom = {-0.1, -0.5, -0.1, 0.1, -0.5+0.6, 0.1},
     --     wall_side = {-0.5, -0.1, -0.1, -0.5+0.3, 0.5, 0.1},
-    --},
-
-    --node_box = {
+    -- },
+    -- node_box = {
     --    type = "wallmounted",
     --    wall_top = {-0.0625, 0.5-0.5625, -0.0625, 0.0625, 0.5, 0.0625},
     --    wall_bottom = {-0.0625, -0.5, -0.0625, 0.0625, -0.5+0.5625, 0.0625},
     --    wall_side = {-0.5, -0.0625, -0.0625, -0.5+0.28125, 0.5, 0.0625},
-    --},
+    -- },
 })
-
 -- Folhas de carvalho
 core.register_node("nh_nodes:leaves", {
     description = S "Oak Leaves",
@@ -3655,12 +3540,7 @@ core.register_node("nh_nodes:leaves", {
     -- mesh = "oakleaves.obj",
     tiles = { "oakleaves3.png" },
     groups = { snappy = 3, tree_leaves = 1 },
-    drop = {
-        items = {
-            { items = { "nh_nodes:limb" } },
-            { items = { "nh_nodes:oakresin" } },
-        }
-    },
+    drop = { items = { { items = { "nh_nodes:limb" } }, { items = { "nh_nodes:oakresin" } }, } },
     walkable = false,
     use_texture_alpha = "blend",
     paramtype = "light",
@@ -3671,7 +3551,6 @@ core.register_node("nh_nodes:leaves", {
     liquid_renewable = false,
     liquid_range = 0,
     post_effect_color = { a = 15, r = 15, g = 15, b = 15 },
-
 })
 
 -- Registra uma versão "dentro d'água" (da folha de carvalho)
@@ -3691,34 +3570,21 @@ core.register_node("nh_nodes:leavesrelief", {
     drop = "", -- não dropa nada
     node_dig_prediction = "",
     node_placement_prediction = "",
-
-    after_dig_node = function(pos, oldnode, oldmetadata, digger)
-        minetest.set_node(pos, { name = "nh_nodes:leaves" })
-    end,
-
-    on_construct = function(pos)
-        minetest.get_node_timer(pos):start(1.0)
-    end,
-
+    after_dig_node = function(pos, oldnode, oldmetadata, digger) minetest.set_node(pos, { name = "nh_nodes:leaves" }) end,
+    on_construct = function(pos) minetest.get_node_timer(pos):start(1.0) end,
     on_timer = function(pos)
         local node = minetest.get_node(pos)
-        if node.name ~= "nh_nodes:leavesrelief" then
-            return false
-        end
-
+        if node.name ~= "nh_nodes:leavesrelief" then return false end
         -- O node "pai" do plantlike_rooted é o de BAIXO
         local below = { x = pos.x, y = pos.y + 2, z = pos.z }
         local below_name = minetest.get_node(below).name
-
         if below_name ~= "nh_nodes:leaves" and below_name ~= "nh_nodes:leavesrelief" then
             minetest.remove_node(pos)
             return false
         end
-
         return true
     end,
 })
-
 core.register_node("nh_nodes:leavesrelief", {
     description = S "Leaves Relief",
     drawtype = "plantlike_rooted",
@@ -3735,34 +3601,21 @@ core.register_node("nh_nodes:leavesrelief", {
     drop = "", -- não dropa nada
     node_dig_prediction = "",
     node_placement_prediction = "",
-
-    after_dig_node = function(pos, oldnode, oldmetadata, digger)
-        minetest.set_node(pos, { name = "nh_nodes:leaves" })
-    end,
-
-    on_construct = function(pos)
-        minetest.get_node_timer(pos):start(1.0)
-    end,
-
+    after_dig_node = function(pos, oldnode, oldmetadata, digger) minetest.set_node(pos, { name = "nh_nodes:leaves" }) end,
+    on_construct = function(pos) minetest.get_node_timer(pos):start(1.0) end,
     on_timer = function(pos)
         local node = minetest.get_node(pos)
-        if node.name ~= "nh_nodes:leavesrelief" then
-            return false
-        end
-
+        if node.name ~= "nh_nodes:leavesrelief" then return false end
         -- O node "pai" do plantlike_rooted é o de BAIXO
         local below = { x = pos.x, y = pos.y + 2, z = pos.z }
         local below_name = minetest.get_node(below).name
-
         if below_name ~= "nh_nodes:leaves" and below_name ~= "nh_nodes:leavesrelief" then
             minetest.remove_node(pos)
             return false
         end
-
         return true
     end,
 })
-
 core.register_node("nh_nodes:kelp", {
     description = S "Kelp" .. "\n" .. S "[Algae]",
     drawtype = "plantlike_rooted",
@@ -3774,22 +3627,16 @@ core.register_node("nh_nodes:kelp", {
     paramtype = "light",
     paramtype2 = "leveled",
     groups = { snappy = 3 },
-    selection_box = {
-        type = "fixed",
-        fixed = { { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 },
-            { -2 / 16, 0.5,  -2 / 16, 2 / 16, 3.5, 2 / 16 },
-        },
-    },
+    selection_box = { type = "fixed", fixed = { { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 }, { -2 / 16, 0.5, -2 / 16, 2 / 16, 3.5, 2 / 16 }, }, },
     node_dig_prediction = "nh_nodes:wet_sand",
     node_placement_prediction = "nh_nodes:wet_sand",
-    --sounds = default.node_sound_sand_defaults({
+    -- sounds = default.node_sound_sand_defaults({
     --    dig = {name = "default_dig_snappy", gain = 0.2},
     --    dug = {name = "default_grass_footstep", gain = 0.25},
-    --}),
+    -- }),
     on_place = function(itemstack, placer, pointed_thing)
         -- Call on_rightclick if the pointed node defines it
-        if pointed_thing.type == "node" and not (placer and placer:is_player()
-            ) then
+        if pointed_thing.type == "node" and not (placer and placer:is_player()) then
             local node_ptu = minetest.get_node(pointed_thing.under)
             local def_ptu = minetest.registered_nodes[node_ptu.name]
             if def_ptu and def_ptu.on_rightclick then
